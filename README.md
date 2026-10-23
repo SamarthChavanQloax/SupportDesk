@@ -813,7 +813,9 @@ Testing tools should be finalized after the development stack and repository str
 The following directory structure is a starting proposal, not an existing implementation guarantee.
 
 ```text
+
 SupportDesk/
+│
 ├── README.md
 ├── .gitignore
 ├── .editorconfig
@@ -830,7 +832,7 @@ SupportDesk/
 │   ├── api/
 │   │   └── API-Specification.md
 │   ├── database/
-│   │   └── schema.sql
+│   │   └── database-design.md
 │   ├── testing/
 │   │   └── test-plan.md
 │   └── decisions/
@@ -839,12 +841,16 @@ SupportDesk/
 ├── frontend/
 │   ├── public/
 │   ├── src/
+│   │   ├── assets/
 │   │   ├── components/
+│   │   │   ├── common/
+│   │   │   └── ui/
 │   │   ├── layouts/
 │   │   ├── pages/
 │   │   ├── features/
 │   │   │   ├── auth/
 │   │   │   ├── tickets/
+│   │   │   ├── assignments/
 │   │   │   ├── responses/
 │   │   │   ├── attachments/
 │   │   │   ├── users/
@@ -855,14 +861,28 @@ SupportDesk/
 │   │   ├── styles/
 │   │   ├── App.jsx
 │   │   └── main.jsx
-│   └── package.json
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   ├── .env.example
+│   └── .gitignore
 │
 ├── backend/
 │   ├── src/
 │   │   ├── config/
+│   │   │   ├── database.js
+│   │   │   └── environment.js
 │   │   ├── middleware/
+│   │   │   ├── auth.middleware.js
+│   │   │   ├── role.middleware.js
+│   │   │   ├── error.middleware.js
+│   │   │   └── not-found.middleware.js
 │   │   ├── modules/
 │   │   │   ├── auth/
+│   │   │   │   ├── auth.routes.js
+│   │   │   │   ├── auth.controller.js
+│   │   │   │   ├── auth.service.js
+│   │   │   │   └── auth.validation.js
 │   │   │   ├── users/
 │   │   │   ├── roles/
 │   │   │   ├── tickets/
@@ -870,18 +890,29 @@ SupportDesk/
 │   │   │   ├── responses/
 │   │   │   ├── attachments/
 │   │   │   ├── history/
-│   │   │   └── reports/
+│   │   │   ├── reports/
+│   │   │   └── ai/                  # Future AI integration
+│   │   │       ├── ai.routes.js
+│   │   │       ├── ai.controller.js
+│   │   │       ├── ai.service.js
+│   │   │       └── ai.validation.js
 │   │   ├── routes/
+│   │   │   └── index.js
 │   │   ├── validators/
 │   │   ├── utils/
 │   │   ├── app.js
 │   │   └── server.js
 │   ├── tests/
-│   └── package.json
+│   │   ├── unit/
+│   │   └── integration/
+│   ├── package.json
+│   ├── .env.example
+│   └── .gitignore
 │
 ├── database/
 │   ├── migrations/
-│   └── seeds/
+│   ├── seeds/
+│   └── README.md
 │
 ├── tests/
 │   └── e2e/
@@ -889,6 +920,7 @@ SupportDesk/
 └── .github/
     ├── ISSUE_TEMPLATE/
     └── pull_request_template.md
+
 ```
 
 The final structure may be simplified or expanded based on the approved project scope and development conventions.
