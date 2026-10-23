@@ -1,618 +1,1047 @@
-# 🎫 SupportDesk_PRD
+# 🎫 SupportDesk — Customer Support Ticket Management System
 
-## Customer Support Ticket Management System
+<p align="center">
+  <strong>One Platform. Every Ticket. Better Support.</strong>
+</p>
 
-*A clear, centralized workflow for raising, managing, and resolving support requests.*
+<p align="center">
+  📌 Project Status: Planning — Pending Senior Review
+</p>
 
-| 📄 Document | 🏷️ Version | 🚦 Status | 🗓️ Updated |
-|---|---|---|---|
-| Project README + Product Requirements Overview | 1.4 | 🟡 Draft for review | 22 October 2026 |
-
-> **Note:** Requirements, priorities, technical choices, and timelines marked *proposed* must be reviewed by the project senior.
-
-SupportDesk is a proposed web-based application for managing customer support requests in one central place. Customers can raise and track tickets, support agents can respond to, prioritize, assign, and resolve them, and administrators can manage access and monitor ticket activity.
-
-This README brings together the current project overview, proposed requirements, user stories, workflow, architecture, data model, API outline, quality expectations, and delivery plan. Any detail marked **Proposed**, **Optional**, or **To confirm** must be reviewed with the project senior before implementation.
-
-### ✨ At a glance
-
-| Area | Summary |
-|---|---|
-| Product | Customer support ticket management |
-| Main users | Customers, support agents, administrators |
-| Proposed frontend | React + Vite + Tailwind CSS |
-| Proposed backend | Node.js + Express.js |
-| Proposed database | PostgreSQL |
-| First milestone | Reliable core ticket workflow |
-| Later possibilities | AI assistance, automation, integrations, mobile app |
-
-> **Project principle:** Build and test the core ticket workflow first. Add optional enhancements only after the senior confirms the scope.
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Planning-orange?style=for-the-badge" alt="Project Status"/>
+  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React and Vite"/>
+  <img src="https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js and Express"/>
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+</p>
 
 ---
 
-## 🗂️ Contents
+## 📑 Table of Contents
 
-**Project basics**
-1. Project Overview
-2. Problem Statement
-3. Objectives
-4. Project Scope
-
-**Users and product behavior**
-5. Users and Roles
-6. Main Features
-7. Ticket Lifecycle
-8. User Stories and Acceptance Criteria
-
-**Requirements and design**
-9. Functional Requirements
-10. Non-Functional Requirements
-11. Proposed Technology Stack
-12. High-Level Architecture
-13. Proposed Data Model
-14. Proposed REST API
-
-**Delivery and governance**
-15. Security and Privacy
-16. Testing and Acceptance
-17. Eight-Week Delivery Roadmap
-18. Repository Structure
-19. Local Setup
-20. Risks and Mitigations
-21. Assumptions and Open Questions
-22. Glossary
-23. Approval Checklist
-24. Document History
----
-
-### 👀 How to read this document
-
-- **Proposed** means a working recommendation that still needs senior review.
-- **MVP** means the first release focused on the essential ticket workflow.
-- **Acceptance criteria** describe testable outcomes for a user story.
-- **Open questions** are decisions to confirm before implementation.
+- [📖 Project Overview](#-project-overview)
+- [🎯 Project Objectives](#-project-objectives)
+- [👥 User Roles](#-user-roles)
+- [✨ Proposed Features](#-proposed-features)
+- [🛠️ Proposed Technology Stack](#-proposed-technology-stack)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🔄 Ticket Workflow](#-ticket-workflow)
+- [📐 System Diagrams](#-system-diagrams)
+  - [Entity Relationship Diagram](#1-entity-relationship-diagram)
+  - [Class Diagram](#2-class-diagram)
+  - [Use Case Diagram](#3-use-case-diagram)
+  - [Data Flow Diagram](#4-data-flow-diagram)
+  - [Authentication and Authorization Flow](#5-authentication-and-authorization-flow)
+- [🗄️ Proposed Database Design](#️-proposed-database-design)
+- [🔌 Proposed API Modules](#-proposed-api-modules)
+- [🔐 Security and Privacy](#-security-and-privacy)
+- [🧪 Testing Strategy](#-testing-strategy)
+- [📁 Proposed Repository Structure](#-proposed-repository-structure)
+- [🚀 Getting Started](#-getting-started)
+- [📅 Proposed Development Roadmap](#-proposed-development-roadmap)
+- [❓ Open Questions](#-open-questions)
+- [🤝 Contribution Guidelines](#-contribution-guidelines)
 
 ---
 
-## 1. Project Overview
+## 📖 Project Overview
 
-> **One workspace. Clear ownership. Trackable resolutions.**
+**SupportDesk** is a proposed customer support ticket management system designed to organize, track, and manage customer issues through a centralized platform.
 
-SupportDesk is intended to provide a structured workflow for customer support requests. Each request is represented by a ticket with a unique identifier, details, status, priority, customer, optional assignee, replies, and relevant history.
+In many organizations, customer queries and technical issues are handled through scattered emails, messages, and manual processes. This can make it difficult to track progress, assign responsibility, maintain communication, and resolve issues efficiently.
 
-### Product vision
+SupportDesk aims to provide a structured workflow where customers can submit support tickets, support agents can manage and resolve them, and administrators can oversee users and system operations.
 
-Make support requests easier to submit, track, assign, communicate about, and resolve through a centralized, secure, and maintainable system.
+The project is currently in the planning phase. The requirements, technology stack, database design, and diagrams in this README are proposals pending review.
 
-### Project context
+## 🎯 Project Objectives
 
-The current project direction is to build and validate the core ticket-management application first. Potential later capabilities include AI-assisted support, workflow automation, mobile applications, and AI agents. These are **future possibilities**, not commitments for the first release. AI features should not be added until the core workflow, persistent storage, API, tests, and acceptance checks are working successfully.
+- Centralize customer support requests in one platform.
+- Allow customers to create and track support tickets.
+- Enable support agents to manage assigned tickets.
+- Organize tickets by status and priority.
+- Maintain a history of ticket updates and responses.
+- Provide role-based access to authorized features.
+- Improve communication and visibility throughout the support process.
+- Establish a maintainable foundation for future enhancements.
 
-## 2. Problem Statement
+## 👥 User Roles
 
-Support requests handled through disconnected messages, spreadsheets, or informal processes can be hard to track. Teams may lack a consistent view of ticket ownership, urgency, progress, and communication history.
+### 👤 1. Customer
 
-SupportDesk proposes to address this by:
-- Providing a central place to create and view tickets.
-- Keeping ticket status and communication associated with the request.
-- Giving authorized agents tools to prioritize, assign, respond to, and resolve tickets.
-- Giving administrators user-access controls and basic operational visibility.
-- Enforcing server-side authorization so ticket data is not exposed to unauthorized users.
+Customers will be able to:
 
-These are proposed product needs and should be confirmed against the project senior's expectations.
+- Register and log in.
+- Create new support tickets.
+- Describe issues and provide relevant details.
+- View their own tickets.
+- Track ticket status and progress.
+- Communicate with support agents.
+- View previous ticket activity.
 
-## 3. Objectives
+### 🧑‍💻 2. Support Agent
 
-### Primary objectives
-1. Let customers submit support requests.
-2. Give customers an appropriate way to view their own ticket details and status.
-3. Let support agents handle tickets through a consistent workflow.
-4. Make ticket ownership, priority, status, and replies visible to authorized users.
-5. Let administrators manage user accounts and roles.
-6. Provide basic reporting or summary metrics if confirmed in MVP scope.
-7. Build a testable web application with a persistent relational database.
+Support agents will be able to:
 
-### Candidate success measures
-- Valid ticket submissions create a ticket and return a unique identifier.
-- Users cannot view or modify tickets beyond their permissions.
-- Authorized users can add replies and perform allowed status transitions.
-- Invalid input produces clear validation feedback.
-- Critical workflows pass approved acceptance tests.
-- The application can be run and reviewed in a documented environment.
+- View tickets available to them according to permissions.
+- Access assigned tickets.
+- Review customer issues.
+- Update ticket status and priority where authorized.
+- Respond to customer queries.
+- Record ticket updates.
+- Resolve issues and maintain ticket history.
 
-Numeric performance, availability, and service-level targets are **to confirm**.
+### 🛡️ 3. Administrator
 
-## 4. Project Scope
+Administrators will be able to:
 
-### 4.1 MVP at a glance
+- Manage user accounts.
+- Assign roles and permissions.
+- Oversee ticket operations.
+- Manage assignments and ticket statuses.
+- Review relevant system activity.
+- Access administrative functions according to approved requirements.
 
-The first version is intended to answer three questions well: **Who needs help? What is happening with the ticket? Who is responsible for the next action?**
+*Final role permissions and access rules are pending senior review.*
 
-### 4.1.1 Proposed MVP — core workflow
+## ✨ Proposed Features
 
-- Authentication for protected functionality.
-- Role-based access control for customer, support agent, and administrator roles.
-- Create a support ticket.
-- List and view tickets according to permissions.
-- View ticket details, status, priority, and conversation.
-- Add replies to tickets.
-- Set ticket priority.
-- Assign tickets to agents, if approved.
-- Update ticket status and resolve tickets.
-- Manage users and role assignments as an administrator.
-- Basic ticket summary/report view, if approved.
-- Input validation, error handling, and automated tests.
+### 🔑 Authentication and User Management
 
-### 4.2 Potential future enhancements — not part of the confirmed MVP
+- User registration and login.
+- Secure password handling.
+- Authentication and authorization.
+- Role-based access control.
+- User profile management.
 
-- AI-assisted ticket classification or suggested priority.
-- AI-generated response suggestions.
-- AI support agents or conversational assistance.
-- Workflow automation and configurable rules.
-- Mobile application.
-- Email or SMS notifications.
-- Attachments.
-- Third-party CRM or service integrations.
-- Advanced analytics and custom reports.
-- Multi-organization tenancy.
+### 🎫 Ticket Management
 
-Future features should be planned only after core workflows are stable and approved.
+- Create, view, and update support tickets.
+- Assign tickets to support agents.
+- Set ticket priorities.
+- Track ticket statuses.
+- View ticket details and history.
+- Close or reopen tickets according to approved workflow rules.
 
-### 4.3 Out of scope unless specifically approved
+### 💬 Communication
 
-- Billing and payment processing.
-- A native mobile app in the initial release.
-- Autonomous AI actions that change ticket state without human oversight.
-- Integrations not requested by the project senior.
+- Customer and agent responses.
+- Conversation history associated with tickets.
+- Optional internal notes for agents, subject to approval.
+- Optional file attachments for supporting evidence.
 
-## 5. Users and Roles
+### 📊 Administration and Reporting
 
-| Role | Main needs | Proposed permissions |
-|---|---|---|
-| **Customer** | Raise support requests and track progress | Create tickets; view own tickets; reply where allowed |
-| **Support Agent** | Work on incoming requests | View authorized tickets; reply; update status/priority; assign tickets if permitted |
-| **Administrator** | Manage access and monitor the system | Manage users and roles; view administrative information and approved reports |
+- User and role management.
+- Ticket overview and filtering.
+- Ticket status and priority summaries.
+- Basic operational reports, if included in the approved MVP scope.
 
-### Access-control principles
-- Enforce permissions on the backend for every protected operation.
-- Do not rely only on hiding buttons in the frontend.
-- Customers should not be able to access another customer's ticket unless a specific approved rule allows it.
-- Exact agent visibility and administrator powers must be confirmed.
+## 🛠️ Proposed Technology Stack
 
-## 6. Main Features
+The following stack is proposed and has not yet been confirmed as the final implementation stack.
 
-The MVP should focus on the essentials first: secure access, a reliable ticket lifecycle, and clear communication. Optional enhancements should wait until this workflow is tested.
+### Frontend
 
-| Feature | Description | Status |
-|---|---|---|
-| Authentication | Sign in and protect private areas | Proposed MVP |
-| Ticket creation | Submit subject, description, and required fields | Proposed MVP |
-| Ticket list and details | View authorized tickets and their details | Proposed MVP |
-| Replies | Keep customer-agent messages with the ticket | Proposed MVP |
-| Priority management | Mark tickets with an approved priority level | Proposed MVP |
-| Assignment | Set a responsible agent | Proposed; confirm permissions |
-| Status management | Move tickets through an agreed lifecycle | Proposed MVP |
-| User administration | Manage accounts and roles | Proposed MVP |
-| Reports | Show approved ticket summaries | Proposed; confirm scope |
-| AI assistance | Classification or response suggestions | Future phase only |
-| Automation | Rules for repetitive workflow steps | Future phase |
-| Mobile experience | Mobile-responsive web UI first; native app later if needed | Native app is future scope |
+- **React** — component-based user interface.
+- **Vite** — frontend development and build tooling.
+- **Tailwind CSS** — utility-first styling.
+- **React Router** — client-side navigation, if selected.
 
-## 7. Ticket Lifecycle
+### Backend
 
-### Proposed states
+- **Node.js** — JavaScript runtime.
+- **Express.js** — backend API framework.
+- **JWT** — proposed token-based authentication mechanism.
+- **Validation middleware** — request validation and input checks.
 
-- **Open** — ticket has been created and is awaiting handling.
-- **In Progress** — an agent is actively handling the request.
-- **Resolved** — the request has been marked as addressed.
-- **Closed** — optional final state, only if approved.
+### Database
 
-The exact statuses, valid transitions, and reopening behavior must be agreed before implementation.
+- **PostgreSQL** — relational database for users, tickets, assignments, responses, and related records.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Open: Ticket created
-    Open --> InProgress: Agent starts work
-    InProgress --> Open: Waiting / returned to queue, if allowed
-    InProgress --> Resolved: Issue addressed
-    Resolved --> Closed: Close, if supported
-    Resolved --> Open: Reopen, if approved
-```
+### Development and Testing
 
-### Proposed end-to-end workflow
+- Git and GitHub for version control.
+- Postman for API testing.
+- Jest or an equivalent testing framework, subject to selection.
+- Playwright or an equivalent tool for end-to-end testing, subject to selection.
+
+## 🏗️ System Architecture
+
+The proposed architecture separates the frontend, backend API, and database.
 
 ```mermaid
 flowchart TD
-    A[Customer signs in] --> B[Submit ticket]
-    B --> C{Input valid?}
-    C -- No --> D[Show validation errors]
-    D --> B
-    C -- Yes --> E[Create ticket and ticket number]
-    E --> F[Authorized queue / ticket view]
-    F --> G[Agent reviews ticket]
-    G --> H[Reply, prioritize, or assign]
-    H --> I{Issue addressed?}
-    I -- No --> G
-    I -- Yes --> J[Mark resolved]
-    J --> K[Show updated status]
+    CUSTOMER["Customer"]
+    AGENT["Support Agent"]
+    ADMIN["Administrator"]
+
+    FRONTEND["React + Vite Frontend"]
+    API["Node.js + Express API"]
+    AUTH["Authentication and Authorization"]
+    SERVICES["Ticket and User Services"]
+    DATABASE[("PostgreSQL Database")]
+
+    CUSTOMER --> FRONTEND
+    AGENT --> FRONTEND
+    ADMIN --> FRONTEND
+
+    FRONTEND --> API
+    API --> AUTH
+    AUTH --> SERVICES
+    SERVICES --> DATABASE
+    DATABASE --> SERVICES
+    SERVICES --> API
+    API --> FRONTEND
 ```
 
-## 8. User Stories and Acceptance Criteria
+**Architecture explanation:**
 
-The eight stories below reflect the current working plan. Review them with the senior before treating them as approved requirements.
+- The frontend provides the user interface.
+- The backend exposes APIs for application operations.
+- Authentication and authorization protect restricted resources.
+- Application services implement ticket and user management logic.
+- PostgreSQL stores persistent application data.
 
-### US-01 — Submit a support ticket
-**As a customer, I want to submit a support ticket so that I can request help.**
+This architecture is a proposed design, not a claim that these components have already been implemented.
 
-- **AC-01:** Given I am authenticated and have entered valid required details, when I submit the form, then the system creates a ticket and displays its unique identifier.
-- **AC-02:** Given a required field is missing or invalid, when I submit the form, then validation feedback is shown and no ticket is created.
+## 🔄 Ticket Workflow
 
-### US-02 — View ticket details
-**As an authorized user, I want to view ticket details so that I can understand the status and history.**
-
-- **AC-01:** Given I have permission to access a ticket, when I open it, then its subject, description, status, priority, and available conversation history are shown.
-- **AC-02:** Given I do not have permission, when I request the ticket, then access is denied without exposing protected data.
-
-### US-03 — Respond to a ticket
-**As an authorized participant, I want to reply to a ticket so that communication stays in one place.**
-
-- **AC-01:** Given I can access an active ticket and have entered a valid reply, when I submit it, then the reply is saved and displayed in the conversation.
-- **AC-02:** Given the reply is empty or replies are not allowed for the ticket's current state, when I submit it, then the system rejects it and explains the issue.
-
-### US-04 — Prioritize tickets
-**As a support agent, I want to set ticket priority so that urgent requests can be handled appropriately.**
-
-- **AC-01:** Given I am authorized to change priority, when I select a permitted value and save, then the updated priority is displayed.
-- **AC-02:** Given I lack permission or submit an unsupported value, when I attempt the update, then the system rejects the change.
-
-### US-05 — Resolve a ticket
-**As a support agent, I want to resolve a ticket so that completed requests are marked accordingly.**
-
-- **AC-01:** Given I am authorized and the ticket is eligible for resolution, when I mark it resolved, then the system saves and displays the resolved status.
-- **AC-02:** Given the ticket cannot be resolved under configured rules, when I attempt resolution, then the system rejects the transition and explains why.
-
-### US-06 — Assign support tickets
-**As an authorized user, I want to assign a ticket to an agent so that ownership is clear.**
-
-- **AC-01:** Given I have assignment permission and the selected agent is eligible, when I assign the ticket, then the new assignee is saved and displayed.
-- **AC-02:** Given I lack permission or the selected agent is invalid/inactive, when I submit the assignment, then the system rejects it.
-
-### US-07 — Manage system access
-**As an administrator, I want to manage user accounts and roles so that access is controlled.**
-
-- **AC-01:** Given I am an administrator, when I create or update a valid user and role assignment, then the system saves the change and confirms the result.
-- **AC-02:** Given I am not an administrator, when I attempt an administrative action, then the system denies the action.
-
-### US-08 — Monitor reports
-**As an authorized user, I want to view basic ticket reports so that I can understand workload.**
-
-- **AC-01:** Given I have reporting permission, when I open reports, then the system displays the agreed ticket summary metrics for the selected period.
-- **AC-02:** Given I lack reporting permission or use an invalid filter, when I request a report, then access is denied or validation feedback is returned.
-
-**To confirm:** report metrics, ticket fields, categories, allowed priorities, status transitions, reopening rules, and exact permissions.
-
-## 9. Functional Requirements
-
-Priorities are provisional and must be confirmed.
-
-| ID | Requirement | Priority |
-|---|---|---|
-| FR-01 | Authenticate users before granting access to protected functionality. | Critical |
-| FR-02 | Enforce role-based permissions and ticket access rules on the server. | Critical |
-| FR-03 | Allow customers to create tickets with required fields. | Critical |
-| FR-04 | Generate a unique identifier for each ticket. | Critical |
-| FR-05 | Allow authorized users to view ticket details and status. | High |
-| FR-06 | Allow authorized participants to add ticket replies. | Critical |
-| FR-07 | Allow authorized agents to set ticket priority. | High |
-| FR-08 | Allow authorized users to assign tickets to agents. | Medium |
-| FR-09 | Allow authorized agents to update status and resolve tickets. | High |
-| FR-10 | Allow administrators to manage user accounts and roles. | Critical |
-| FR-11 | Provide basic ticket summaries to authorized users if reports are approved. | Low |
-| FR-12 | Validate input and return understandable error responses. | High |
-| FR-13 | Preserve ticket replies and relevant status/assignment history according to agreed data rules. | High |
-| FR-14 | Prevent unauthorized users from reading or modifying protected tickets. | Critical |
-
-## 10. Non-Functional Requirements
-
-Numeric targets should be agreed before performance or availability can be tested.
-
-| ID | Category | Proposed requirement |
-|---|---|---|
-| NFR-01 | Security | Protected endpoints require authentication and server-side authorization. |
-| NFR-02 | Privacy | Users only receive data permitted by role and ticket access rules. |
-| NFR-03 | Reliability | Failures return controlled errors and do not leave partial updates. |
-| NFR-04 | Usability | Forms label required fields and show clear validation messages. |
-| NFR-05 | Performance | Common operations meet a target agreed with the senior. |
-| NFR-06 | Maintainability | Backend code separates routing, business logic, and data access. |
-| NFR-07 | Compatibility | The UI works in the desktop browsers agreed by the team. |
-| NFR-08 | Testability | Core business rules and access control have automated test coverage. |
-| NFR-09 | Accessibility | Navigation and forms support keyboard use and readable labels where feasible. |
-| NFR-10 | Observability | Errors are logged without unnecessarily exposing secrets or sensitive content. |
-| NFR-11 | Data integrity | Relationships and required fields are enforced by application and database rules. |
-
-## 11. Proposed Technology Stack
-
-The current proposal uses a relational database. **PostgreSQL is proposed; MongoDB is not part of this stack proposal.** These choices still need senior confirmation.
-
-| Layer | Proposed technology | Intended use |
-|---|---|---|
-| Frontend | React + Vite | Web interface |
-| Styling | Tailwind CSS | Responsive UI styling |
-| Backend | Node.js + Express.js | REST API and business logic |
-| Database | PostgreSQL | Relational storage for users, tickets, replies, and history |
-| Authentication | Secure session or token-based approach, to be selected | Sign-in and protected access |
-| Testing | Unit and API/integration tests | Verify rules and workflows |
-| Version control | Git | Source history and collaboration |
-
-**Approval needed:** confirm the stack, authentication approach, testing libraries, hosting, and coding standards with the senior.
-
-## 12. High-Level Architecture
+The proposed ticket lifecycle describes how a support request could move from creation to resolution.
 
 ```mermaid
 flowchart TD
-    U[Customer / Agent / Administrator] --> UI[React Web Application]
-    UI --> API[Node.js / Express REST API]
-    API --> AUTH[Authentication and Authorization]
-    API --> SVC[Ticket and User Services]
-    SVC --> DB[(PostgreSQL Database)]
-    API --> LOG[Application Logs]
+    START([Start])
+    LOGIN["User logs in"]
+    CREATE["Customer creates a ticket"]
+    SAVE["System validates and saves ticket"]
+    REVIEW["Ticket becomes available for review"]
+    ASSIGN["Ticket is assigned to an agent"]
+    INVESTIGATE["Agent investigates the issue"]
+    RESPOND["Agent communicates with customer"]
+    RESOLVE{"Issue resolved?"}
+    UPDATE["Agent continues investigation"]
+    CLOSE["Ticket is marked resolved or closed"]
+    END([End])
+
+    START --> LOGIN
+    LOGIN --> CREATE
+    CREATE --> SAVE
+    SAVE --> REVIEW
+    REVIEW --> ASSIGN
+    ASSIGN --> INVESTIGATE
+    INVESTIGATE --> RESPOND
+    RESPOND --> RESOLVE
+    RESOLVE -- No --> UPDATE
+    UPDATE --> INVESTIGATE
+    RESOLVE -- Yes --> CLOSE
+    CLOSE --> END
 ```
 
-### Architecture responsibilities
+**Workflow explanation:**
 
-- **Frontend:** pages, forms, ticket lists, ticket details, validation feedback, and role-aware navigation.
-- **Backend API:** request validation, authentication, authorization, business rules, and consistent responses.
-- **Services:** ticket creation, replies, priority, assignment, status transitions, user administration, and reporting logic.
-- **Database:** persistent relational data and constraints.
-- **Logging:** useful diagnostics without logging secrets or unnecessary private content.
+1. A customer logs in and creates a support ticket.
+2. The system validates the submitted information.
+3. The ticket becomes available for review and assignment.
+4. An authorized agent investigates the reported issue.
+5. The agent communicates updates to the customer.
+6. If the issue remains unresolved, investigation continues.
+7. Once resolved, the ticket is moved to the appropriate final status.
 
-## 13. Proposed Data Model
+The exact status transitions and reopening rules must be finalized during requirements review.
 
-These are conceptual entities, not a finalized database schema.
+## 📐 System Diagrams
 
-| Entity | Example fields | Purpose |
-|---|---|---|
-| User | id, name, email, password_hash, role, active, created_at | Account and access information |
-| Ticket | id, ticket_number, subject, description, status, priority, customer_id, assignee_id, created_at, updated_at | Support request |
-| TicketReply | id, ticket_id, author_id, message, created_at | Conversation messages |
-| TicketHistory | id, ticket_id, actor_id, action, old_value, new_value, created_at | Audit/history of important changes |
+The following diagrams are individual Mermaid blocks. GitHub supports Mermaid diagrams inside Markdown files when the code fence is written as `mermaid`.
 
-### Data design considerations
-- Use stable primary keys and foreign keys.
-- Store password hashes, never plaintext passwords.
-- Enforce uniqueness for user email and ticket number where appropriate.
-- Index fields used frequently for filtering, such as status, priority, assignee, and creation date, after reviewing query needs.
-- Define deletion, account deactivation, retention, and audit policies.
-- Decide whether ticket replies can be edited or deleted and who can do so.
+### 1. Entity Relationship Diagram
 
-## 14. Proposed REST API
+This proposed ER diagram shows the main entities and their relationships.
 
-Routes are a starting point, not an approved API contract. Request/response schemas, pagination, filtering, and error formats need technical design.
+```mermaid
+erDiagram
+    ROLE ||--o{ USER : assigned_to
+    USER ||--o{ TICKET : creates
+    STATUS ||--o{ TICKET : classifies
+    PRIORITY ||--o{ TICKET : classifies
+    TICKET ||--o{ ASSIGNMENT : has
+    USER ||--o{ ASSIGNMENT : receives
+    USER ||--o{ ASSIGNMENT : assigns
+    TICKET ||--o{ RESPONSE : contains
+    USER ||--o{ RESPONSE : writes
+    TICKET ||--o{ ATTACHMENT : includes
+    TICKET ||--o{ TICKET_HISTORY : records
+    USER ||--o{ TICKET_HISTORY : performs
 
-| Method | Route | Purpose |
-|---|---|---|
-| POST | `/api/auth/register` | Register a user, if public registration is allowed |
-| POST | `/api/auth/login` | Authenticate a user |
-| GET | `/api/tickets` | List tickets visible to the current user |
-| POST | `/api/tickets` | Create a ticket |
-| GET | `/api/tickets/:id` | Retrieve an authorized ticket |
-| PATCH | `/api/tickets/:id` | Update permitted ticket fields |
-| GET | `/api/tickets/:id/replies` | List ticket replies |
-| POST | `/api/tickets/:id/replies` | Add a reply |
-| PATCH | `/api/tickets/:id/assignment` | Assign a ticket |
-| PATCH | `/api/tickets/:id/status` | Change ticket status |
-| GET | `/api/reports/tickets` | Retrieve agreed ticket summaries |
-| GET | `/api/admin/users` | List users, for authorized administrators |
-| POST | `/api/admin/users` | Create a user, if permitted |
-| PATCH | `/api/admin/users/:id` | Update account/role details, if permitted |
+    ROLE {
+        int role_id PK
+        string role_name
+        string description
+    }
 
-### API behavior expectations
-- Validate every request on the server.
-- Return suitable HTTP status codes and a consistent error structure.
-- Enforce authorization for both reading and changing records.
-- Do not expose password hashes, tokens, or unnecessary internal data in responses.
-- Document filters, pagination, and sorting before implementation.
+    USER {
+        int user_id PK
+        int role_id FK
+        string name
+        string email
+        string password_hash
+        datetime created_at
+    }
 
-## 15. Security and Privacy
+    TICKET {
+        int ticket_id PK
+        int customer_id FK
+        int status_id FK
+        int priority_id FK
+        string title
+        text description
+        datetime created_at
+        datetime updated_at
+    }
 
-- Hash passwords using a maintained password-hashing library.
-- Validate and normalize client-supplied data on the server.
-- Enforce authentication and authorization on every protected operation.
-- Check ticket visibility before returning ticket details or replies.
-- Use parameterized database queries or a safe ORM.
-- Store secrets in environment variables or an approved secrets manager; never commit them.
-- Configure CORS and HTTPS appropriately for the deployment environment.
-- Avoid logging passwords, tokens, or unnecessary sensitive message content.
-- Define account deactivation, retention, backup, and deletion behavior before production.
-- Test for privilege escalation and insecure direct object reference risks.
+    STATUS {
+        int status_id PK
+        string status_name
+    }
 
-## 16. Testing and Acceptance
+    PRIORITY {
+        int priority_id PK
+        string priority_name
+    }
 
-### Testing levels
-- **Unit tests:** validation, status transitions, priority rules, and permission logic.
-- **API/integration tests:** authentication, ticket creation, replies, assignment, status changes, and database behavior.
-- **Authorization tests:** customers cannot access other customers' tickets; non-admins cannot perform admin actions.
-- **UI tests:** forms, validation messages, ticket list/detail pages, and responsive layout.
-- **Regression tests:** rerun core tests after changes.
-- **User Acceptance Testing (UAT):** senior or designated reviewer checks the system against approved acceptance criteria.
+    ASSIGNMENT {
+        int assignment_id PK
+        int ticket_id FK
+        int agent_id FK
+        int assigned_by FK
+        datetime assigned_at
+    }
 
-### Proposed release quality gate
-- Critical workflow tests pass.
-- Access-control checks pass.
-- Known defects and limitations are documented.
-- Configuration and database migration steps are reviewed.
-- Reviewer approves the release candidate.
+    RESPONSE {
+        int response_id PK
+        int ticket_id FK
+        int user_id FK
+        text message
+        datetime created_at
+    }
 
-### Core acceptance scenarios
-1. A valid customer can create a ticket.
-2. Invalid ticket data is rejected with clear feedback.
-3. An authorized user can view a ticket.
-4. An unauthorized user cannot view or modify the ticket.
-5. A valid reply is saved and associated with the correct ticket and author.
-6. Authorized status, priority, and assignment changes are saved.
-7. Admin-only operations are blocked for non-admin users.
-8. Approved report metrics are shown only to permitted users.
+    ATTACHMENT {
+        int attachment_id PK
+        int ticket_id FK
+        string file_name
+        string file_path
+        datetime uploaded_at
+    }
 
-## 17. Eight-Week Delivery Roadmap
+    TICKET_HISTORY {
+        int history_id PK
+        int ticket_id FK
+        int user_id FK
+        string action
+        datetime created_at
+    }
+```
 
-This is a **suggested plan**, not a confirmed schedule. Adjust it to the senior's instructions and project deadlines.
+**ER diagram explanation:**
 
-| Week | Focus | Expected deliverable |
-|---|---|---|
-| 1 | Project understanding, PRD, user stories, acceptance criteria, Kanban setup | Reviewed requirements draft and prioritized backlog |
-| 2 | UI flow, data model, API contract, environment setup | Design notes, schema draft, starter project |
-| 3 | Authentication and role-based access | Sign-in flow and protected API routes |
-| 4 | Ticket creation, listing, and detail view | Core ticket CRUD workflow |
-| 5 | Replies, priority, assignment, and status transitions | Agent ticket-handling workflow |
-| 6 | User administration and approved basic reports | Admin and reporting functionality |
-| 7 | Integration, validation, security checks, and automated tests | Test results and bug fixes |
-| 8 | UAT, documentation, deployment preparation, and final review | Reviewed MVP, README, and handover notes |
+- `ROLE` defines the role assigned to a user.
+- `USER` stores user account information.
+- `TICKET` stores support requests.
+- `STATUS` and `PRIORITY` classify tickets.
+- `ASSIGNMENT` records ticket assignments.
+- `RESPONSE` stores ticket communication.
+- `ATTACHMENT` records files associated with tickets.
+- `TICKET_HISTORY` records relevant ticket activity.
 
-**Dependency rule:** complete and validate the core ticket workflow before starting AI features or other major enhancements.
+The exact cardinalities, constraints, and ownership rules need to be confirmed before database implementation. For example, the final design should define whether a ticket can have multiple historical assignments and whether attachments can belong to individual responses.
 
-## 18. Repository Structure
+### 2. Class Diagram
 
-Suggested layout; adapt to team conventions.
+This proposed class diagram represents the main application models and their associations.
+
+```mermaid
+classDiagram
+    class Role {
+        +int roleId
+        +string roleName
+        +string description
+    }
+
+    class User {
+        +int userId
+        +string name
+        +string email
+        +string passwordHash
+        +int roleId
+        +login()
+        +updateProfile()
+    }
+
+    class Ticket {
+        +int ticketId
+        +string title
+        +string description
+        +int statusId
+        +int priorityId
+        +createTicket()
+        +updateTicket()
+        +changeStatus()
+    }
+
+    class Status {
+        +int statusId
+        +string statusName
+    }
+
+    class Priority {
+        +int priorityId
+        +string priorityName
+    }
+
+    class Assignment {
+        +int assignmentId
+        +int ticketId
+        +int agentId
+        +int assignedBy
+        +assignTicket()
+    }
+
+    class Response {
+        +int responseId
+        +int ticketId
+        +int userId
+        +string message
+        +addResponse()
+    }
+
+    class Attachment {
+        +int attachmentId
+        +int ticketId
+        +string fileName
+        +string filePath
+        +uploadAttachment()
+    }
+
+    class TicketHistory {
+        +int historyId
+        +int ticketId
+        +int userId
+        +string action
+        +recordActivity()
+    }
+
+    Role "1" --> "0..*" User : defines
+    User "1" --> "0..*" Ticket : creates
+    Status "1" --> "0..*" Ticket : classifies
+    Priority "1" --> "0..*" Ticket : classifies
+    Ticket "1" --> "0..*" Assignment : has
+    User "1" --> "0..*" Assignment : receives
+    Ticket "1" --> "0..*" Response : contains
+    User "1" --> "0..*" Response : writes
+    Ticket "1" --> "0..*" Attachment : includes
+    Ticket "1" --> "0..*" TicketHistory : records
+```
+
+**Class diagram explanation:**
+
+- Each class represents a proposed application entity.
+- Attributes describe the information associated with each entity.
+- Operations describe example responsibilities.
+- Associations represent relationships between application entities.
+
+The diagram is conceptual. Final methods, service classes, and implementation details should be determined during backend design.
+
+### 3. Use Case Diagram
+
+Mermaid does not provide a native UML use-case diagram syntax. The following flowchart presents the main actors and their proposed interactions with SupportDesk.
+
+```mermaid
+flowchart LR
+    CUSTOMER["Customer"]
+    AGENT["Support Agent"]
+    ADMIN["Administrator"]
+
+    subgraph SUPPORTDESK["SupportDesk System"]
+        UC1(["Register or Log In"])
+        UC2(["Create Ticket"])
+        UC3(["View Own Tickets"])
+        UC4(["Track Ticket Status"])
+        UC5(["Respond to Ticket"])
+        UC6(["View Assigned Tickets"])
+        UC7(["Update Ticket Status"])
+        UC8(["Manage Assignments"])
+        UC9(["Manage Users"])
+        UC10(["Manage Roles"])
+        UC11(["Review Ticket Activity"])
+    end
+
+    CUSTOMER --> UC1
+    CUSTOMER --> UC2
+    CUSTOMER --> UC3
+    CUSTOMER --> UC4
+    CUSTOMER --> UC5
+
+    AGENT --> UC1
+    AGENT --> UC6
+    AGENT --> UC7
+    AGENT --> UC5
+    AGENT --> UC11
+
+    ADMIN --> UC1
+    ADMIN --> UC8
+    ADMIN --> UC9
+    ADMIN --> UC10
+    ADMIN --> UC11
+```
+
+**Use case explanation:**
+
+- Customers create tickets and track their own support requests.
+- Support agents review assigned tickets, respond, and update progress.
+- Administrators manage users, roles, assignments, and authorized oversight functions.
+
+The available use cases depend on the final role-based access control requirements.
+
+### 4. Data Flow Diagram
+
+This proposed high-level DFD shows how information moves between users, application processes, and the database.
+
+```mermaid
+flowchart TD
+    CUSTOMER["Customer"]
+    AGENT["Support Agent"]
+    ADMIN["Administrator"]
+
+    P1(["1.0 Authentication"])
+    P2(["2.0 Ticket Management"])
+    P3(["3.0 Assignment and Responses"])
+    P4(["4.0 User Administration"])
+    P5(["5.0 Ticket History and Reporting"])
+
+    D1[("D1: Users and Roles")]
+    D2[("D2: Tickets")]
+    D3[("D3: Assignments and Responses")]
+    D4[("D4: Ticket History")]
+
+    CUSTOMER -->|"Login details"| P1
+    AGENT -->|"Login details"| P1
+    ADMIN -->|"Login details"| P1
+    P1 <--> D1
+
+    CUSTOMER -->|"Ticket details"| P2
+    P2 <--> D2
+    P2 -->|"Ticket status and details"| CUSTOMER
+
+    AGENT -->|"Assignment updates and responses"| P3
+    P3 <--> D2
+    P3 <--> D3
+    P3 -->|"Ticket updates"| CUSTOMER
+
+    ADMIN -->|"User and role changes"| P4
+    P4 <--> D1
+
+    ADMIN -->|"Authorized report requests"| P5
+    AGENT -->|"Ticket activity requests"| P5
+    P5 --> D2
+    P5 --> D3
+    P5 <--> D4
+    P5 -->|"Relevant activity and summaries"| ADMIN
+```
+
+**DFD explanation:**
+
+- Authentication validates user access.
+- Ticket management processes customer support requests.
+- Assignment and response processes manage agent work and communication.
+- User administration handles user and role operations.
+- History and reporting processes retrieve relevant activity information.
+
+This is a high-level conceptual data flow diagram. Detailed data stores, external services, and process boundaries may change during implementation planning.
+
+### 5. Authentication and Authorization Flow
+
+This diagram shows a proposed request authentication process.
+
+```mermaid
+flowchart TD
+    START([User Opens Application])
+    LOGIN["Enter Login Credentials"]
+    VALIDATE["Validate Credentials"]
+    CHECK{"Credentials Valid?"}
+    REJECT["Return Authentication Error"]
+    ISSUE["Issue Authentication Token"]
+    REQUEST["Send Protected API Request"]
+    VERIFY["Verify Token"]
+    TOKENOK{"Token Valid?"}
+    DENY["Return Unauthorized Response"]
+    ROLECHECK["Check User Role and Permissions"]
+    ALLOW{"Permission Granted?"}
+    FORBIDDEN["Return Forbidden Response"]
+    PROCESS["Execute Authorized Operation"]
+    RESPONSE["Return API Response"]
+    END([End])
+
+    START --> LOGIN
+    LOGIN --> VALIDATE
+    VALIDATE --> CHECK
+    CHECK -- No --> REJECT
+    REJECT --> END
+    CHECK -- Yes --> ISSUE
+    ISSUE --> REQUEST
+    REQUEST --> VERIFY
+    VERIFY --> TOKENOK
+    TOKENOK -- No --> DENY
+    DENY --> END
+    TOKENOK -- Yes --> ROLECHECK
+    ROLECHECK --> ALLOW
+    ALLOW -- No --> FORBIDDEN
+    FORBIDDEN --> END
+    ALLOW -- Yes --> PROCESS
+    PROCESS --> RESPONSE
+    RESPONSE --> END
+```
+
+**Security flow explanation:**
+
+- Users submit credentials for authentication.
+- Valid credentials result in an authenticated session or token.
+- Protected requests are checked before processing.
+- The backend verifies identity and permissions.
+- Unauthorized requests are rejected.
+- Authorized requests continue to the relevant application operation.
+
+Token storage, expiration, refresh behavior, and logout handling must be finalized in the security design.
+
+## 🗄️ Proposed Database Design
+
+The following entities are proposed for the initial relational database.
+
+### ROLE
+
+Stores available application roles.
+
+- `role_id` — primary key.
+- `role_name` — role name.
+- `description` — optional role description.
+
+### USER
+
+Stores user account details.
+
+- `user_id` — primary key.
+- `role_id` — foreign key to ROLE.
+- `name` — user's display name.
+- `email` — user's email address.
+- `password_hash` — securely stored password hash.
+- `created_at` — account creation timestamp.
+
+### TICKET
+
+Stores customer support requests.
+
+- `ticket_id` — primary key.
+- `customer_id` — foreign key to USER.
+- `status_id` — foreign key to STATUS.
+- `priority_id` — foreign key to PRIORITY.
+- `title` — ticket subject.
+- `description` — issue description.
+- `created_at` — creation timestamp.
+- `updated_at` — last update timestamp.
+
+### STATUS
+
+Defines the available ticket statuses.
+
+- `status_id` — primary key.
+- `status_name` — status label.
+
+### PRIORITY
+
+Defines the available ticket priority levels.
+
+- `priority_id` — primary key.
+- `priority_name` — priority label.
+
+### ASSIGNMENT
+
+Records ticket assignment information.
+
+- `assignment_id` — primary key.
+- `ticket_id` — foreign key to TICKET.
+- `agent_id` — foreign key to USER.
+- `assigned_by` — user who made the assignment.
+- `assigned_at` — assignment timestamp.
+
+### RESPONSE
+
+Stores customer and agent responses.
+
+- `response_id` — primary key.
+- `ticket_id` — foreign key to TICKET.
+- `user_id` — foreign key to USER.
+- `message` — response content.
+- `created_at` — response timestamp.
+
+### ATTACHMENT
+
+Stores metadata for files associated with tickets.
+
+- `attachment_id` — primary key.
+- `ticket_id` — foreign key to TICKET.
+- `file_name` — original or display filename.
+- `file_path` — storage reference.
+- `uploaded_at` — upload timestamp.
+
+### TICKET_HISTORY
+
+Records ticket activity.
+
+- `history_id` — primary key.
+- `ticket_id` — foreign key to TICKET.
+- `user_id` — foreign key to USER.
+- `action` — activity description.
+- `created_at` — activity timestamp.
+
+The schema, naming conventions, constraints, indexing, and deletion policies require review before SQL migrations are created.
+
+## 🔌 Proposed API Modules
+
+The backend may be organized into the following API modules.
+
+### Authentication
+
+- Register a user.
+- Log in.
+- Log out or invalidate a session, depending on the authentication design.
+- Retrieve the current user's profile.
+
+### Users and Roles
+
+- Retrieve permitted user information.
+- Update user details.
+- Manage user accounts.
+- Manage roles and permissions, for authorized administrators.
+
+### Tickets
+
+- Create a ticket.
+- Retrieve ticket details.
+- List tickets according to access permissions.
+- Update ticket information.
+- Change ticket status or priority.
+
+### Assignments
+
+- Assign a ticket to an agent.
+- Change an assignment.
+- Retrieve assignment information.
+
+### Responses and Attachments
+
+- Add a response to a ticket.
+- Retrieve ticket responses.
+- Upload and retrieve permitted attachments.
+
+### History and Reports
+
+- Retrieve authorized ticket history.
+- Generate approved ticket summaries.
+- Filter tickets by relevant attributes.
+
+Actual endpoint paths, HTTP methods, request schemas, response formats, and error codes should be documented in the API specification.
+
+## 🔐 Security and Privacy
+
+Security should be considered throughout development.
+
+- Hash passwords using a suitable password-hashing algorithm.
+- Validate all incoming request data.
+- Enforce role-based access control on the backend.
+- Verify ticket ownership before returning customer-specific information.
+- Restrict administrative operations to authorized users.
+- Store secrets in environment variables rather than source code.
+- Apply appropriate file-upload restrictions if attachments are implemented.
+- Avoid exposing passwords, tokens, and sensitive information in logs.
+- Use secure transport and appropriate security headers in deployment.
+- Record relevant security and ticket activity without unnecessarily collecting personal information.
+
+## 🧪 Testing Strategy
+
+### Unit Testing
+
+Test individual functions and business rules, including:
+
+- Input validation.
+- Ticket status transitions.
+- Assignment rules.
+- Permission checks.
+- Service-layer operations.
+
+### API Testing
+
+Test the backend endpoints for:
+
+- Successful requests.
+- Invalid request data.
+- Missing or invalid authentication.
+- Insufficient permissions.
+- Missing resources.
+- Unexpected server errors.
+
+### Integration Testing
+
+Verify that the application correctly connects:
+
+- Authentication and user management.
+- Ticket services and PostgreSQL.
+- Assignments and ticket records.
+- Responses and ticket history.
+
+### End-to-End Testing
+
+Test complete user journeys, such as:
+
+- Customer creates a ticket.
+- Agent views and updates an assigned ticket.
+- Customer checks ticket progress.
+- Administrator manages a user account.
+
+Testing tools should be finalized after the development stack and repository structure are approved.
+
+## 📁 Proposed Repository Structure
+
+The following directory structure is a starting proposal, not an existing implementation guarantee.
 
 ```text
-supportdesk/
-├── client/
+SupportDesk/
+├── README.md
+├── .gitignore
+├── .editorconfig
+├── .env.example
+│
+├── docs/
+│   ├── PRD/
+│   │   └── SupportDesk-PRD.docx
+│   ├── diagrams/
+│   │   ├── er-diagram.png
+│   │   ├── class-diagram.png
+│   │   ├── use-case-diagram.png
+│   │   └── data-flow-diagram.png
+│   ├── api/
+│   │   └── API-Specification.md
+│   ├── database/
+│   │   └── schema.sql
+│   ├── testing/
+│   │   └── test-plan.md
+│   └── decisions/
+│       └── architecture-decisions.md
+│
+├── frontend/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/
-│   │   ├── pages/
 │   │   ├── layouts/
-│   │   ├── services/
+│   │   ├── pages/
+│   │   ├── features/
+│   │   │   ├── auth/
+│   │   │   ├── tickets/
+│   │   │   ├── responses/
+│   │   │   ├── attachments/
+│   │   │   ├── users/
+│   │   │   └── reports/
 │   │   ├── hooks/
-│   │   └── routes/
-│   └── package.json
-├── server/
-│   ├── src/
-│   │   ├── routes/
-│   │   ├── controllers/
 │   │   ├── services/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── validators/
-│   │   └── config/
+│   │   ├── utils/
+│   │   ├── styles/
+│   │   ├── App.jsx
+│   │   └── main.jsx
 │   └── package.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── middleware/
+│   │   ├── modules/
+│   │   │   ├── auth/
+│   │   │   ├── users/
+│   │   │   ├── roles/
+│   │   │   ├── tickets/
+│   │   │   ├── assignments/
+│   │   │   ├── responses/
+│   │   │   ├── attachments/
+│   │   │   ├── history/
+│   │   │   └── reports/
+│   │   ├── routes/
+│   │   ├── validators/
+│   │   ├── utils/
+│   │   ├── app.js
+│   │   └── server.js
+│   ├── tests/
+│   └── package.json
+│
 ├── database/
-│   └── migrations/
-├── docs/
-│   ├── PRD.md
-│   └── API.md
-├── .gitignore
-└── README.md
+│   ├── migrations/
+│   └── seeds/
+│
+├── tests/
+│   └── e2e/
+│
+└── .github/
+    ├── ISSUE_TEMPLATE/
+    └── pull_request_template.md
 ```
 
-This structure is a proposal. Do not create every directory before implementation needs it.
+The final structure may be simplified or expanded based on the approved project scope and development conventions.
 
-## 19. Local Setup — When Implementation Exists
+## 🚀 Getting Started
 
-The application code and configuration are not described as completed by this document. Once the repository contains the actual implementation, update this section with tested commands.
+**Prerequisites for the proposed stack:**
 
-### Prerequisites (proposed)
-- Node.js version agreed by the team.
-- npm or the package manager selected by the team.
-- PostgreSQL instance.
+- Node.js and npm.
+- PostgreSQL.
 - Git.
+- A code editor.
+- Postman or another API client for testing.
 
-### Setup checklist
-1. Clone the project repository.
-2. Install frontend and backend dependencies using the repository's package manifests.
-3. Create a local PostgreSQL database.
-4. Configure environment variables using a documented `.env.example`.
-5. Run approved database migrations.
-6. Start the backend and frontend using the scripts defined in their `package.json` files.
-7. Run automated tests and verify the core ticket workflow.
+### 1. Clone the Repository
 
-**Do not add real passwords, tokens, database credentials, or production secrets to the README.** Add exact commands only after verifying them against the actual codebase.
+```bash
+git clone <repository-url>
+cd SupportDesk
+```
 
-## 20. Risks and Mitigations
+Replace `<repository-url>` with the actual repository URL.
 
-| Risk | Potential impact | Proposed mitigation |
-|---|---|---|
-| Unclear business rules | Rework and inconsistent behavior | Review this document with the senior before implementation |
-| Weak access control | Unauthorized ticket exposure or modification | Test permissions at API/service level |
-| Scope growth | Delayed delivery | Agree MVP scope and defer optional features |
-| Unclear status lifecycle | Incorrect or stuck tickets | Approve status transitions before coding |
-| Missing performance targets | No objective performance acceptance test | Define measurable targets with the senior |
-| Incomplete test coverage | Regressions and missed edge cases | Map tests to approved acceptance criteria |
-| AI added too early | More complexity before core workflows are reliable | Defer AI until core workflow validation is successful |
-| Unclear ownership of release | Deployment mistakes | Agree release owner, environment, and rollback steps |
+### 2. Configure the Backend
 
-## 21. Assumptions and Open Questions
+```bash
+cd backend
+npm install
+```
 
-### Current assumptions
-- The project is a web-based support ticket management system.
-- Initial roles are customer, support agent, and administrator.
-- The first milestone focuses on the core ticket workflow.
-- PostgreSQL is preferred; MongoDB is not part of the proposed stack.
-- React + Vite and Node.js + Express.js are proposed for the application.
-- AI, automation, and mobile applications are later possibilities rather than initial requirements.
+Configure the required environment variables using the project's approved configuration.
 
-### Questions to confirm with the senior
-1. Can customers register themselves, or must administrators create accounts?
-2. Can agents view every ticket or only assigned tickets?
-3. Which ticket statuses are required? Can resolved tickets be reopened?
-4. Who can set or change priority?
-5. Which fields are mandatory when creating a ticket?
-6. Are ticket categories required?
-7. Which report metrics are needed for the MVP?
-8. Are email notifications or file attachments required?
-9. What performance, availability, and browser-support targets apply?
-10. Which hosting/deployment environment should be used?
-11. Which authentication method, testing tools, and coding standards are required?
-12. Are the eight user stories and provisional priorities acceptable?
-13. What are the official project milestones and review dates?
+Example `.env.example`:
 
-## 22. Glossary
+```dotenv
+PORT=5000
+DATABASE_URL=
+JWT_SECRET=
+NODE_ENV=development
+```
 
-| Term | Meaning |
-|---|---|
-| **PRD** | Product Requirements Document; describes the product problem, goals, scope, requirements, and acceptance expectations. |
-| **Epic** | A broad body of work that can be split into smaller stories. |
-| **User story** | A short description of a user need, often written as “As a…, I want…, so that…”. |
-| **Acceptance criteria** | Testable conditions that define when a story is satisfied. |
-| **Task** | A concrete piece of work needed to implement or deliver something. |
-| **Kanban** | A workflow board that visualizes work as it moves through columns. |
-| **QA** | Quality Assurance; checks whether the product meets defined quality expectations. |
-| **UAT** | User Acceptance Testing; a user or stakeholder verifies that the system meets agreed needs. |
-| **API** | Application Programming Interface; the contract used by software components to communicate. |
-| **RBAC** | Role-Based Access Control; permissions are assigned according to user roles. |
-| **MVP** | Minimum Viable Product; the smallest useful product release that meets the agreed core needs. |
+Use appropriate local development values in your private `.env` file. Never commit actual credentials or secrets.
 
-## 23. Approval Checklist
+### 3. Configure the Frontend
 
-Before implementation begins, review and confirm:
+```bash
+cd ../frontend
+npm install
+```
 
-- [ ] Problem statement and goals
-- [ ] MVP scope and exclusions
-- [ ] User roles and permission boundaries
-- [ ] Functional requirements and priorities
-- [ ] Eight user stories and acceptance criteria
-- [ ] Ticket fields, statuses, priorities, and transitions
-- [ ] Assignment and ticket-visibility rules
-- [ ] Reporting requirements
-- [ ] Data model and API contract
-- [ ] Technology stack and authentication approach
-- [ ] Security, privacy, and testing expectations
-- [ ] Eight-week plan or actual delivery schedule
-- [ ] Deployment and release approach
-- [ ] Open questions resolved or explicitly deferred
+### 4. Start Development Servers
 
-## 24. Document History
+The exact scripts depend on the `package.json` files created during implementation.
 
-| Version | Date | Changes |
-|---|---|---|
-| 1.0 | 22 October 2026 | Initial PRD draft |
-| 1.1 | 22 October 2026 | Expanded README with project scope, roles, workflow, requirements, architecture, data model, API outline, quality plan, roadmap, and open questions |
-| 1.2 | 22 October 2026 | Changed table of contents to plain text and improved the visual overview |
-| 1.3 | 22 October 2026 | Refined heading hierarchy, project metadata, and contents layout |
-| 1.4 | 22 October 2026 | Grouped sections, clarified terminology, and improved document structure |
+Typical commands, once the corresponding scripts exist, may be:
+
+```bash
+# Backend
+cd backend
+npm run dev
+```
+
+```bash
+# Frontend — in a separate terminal
+cd frontend
+npm run dev
+```
+
+These are setup examples; they will work only after the project files, scripts, database configuration, and required dependencies have been created.
+
+## 📅 Proposed Development Roadmap
+
+### Phase 1 — Requirements and Planning
+
+- Review the PRD with the project senior.
+- Confirm the MVP features.
+- Finalize user roles and permissions.
+- Review system diagrams and database relationships.
+- Confirm the technology stack.
+
+### Phase 2 — Database and Backend Foundation
+
+- Create the database schema.
+- Set up the Express application.
+- Configure database connectivity.
+- Implement authentication and authorization.
+- Establish validation and error-handling conventions.
+
+### Phase 3 — Core Ticket Management
+
+- Implement ticket creation and retrieval.
+- Implement assignment workflows.
+- Implement status and priority updates.
+- Implement responses and ticket history.
+- Add attachment support if approved.
+
+### Phase 4 — Frontend Development
+
+- Create the application layout.
+- Build login and registration screens.
+- Build customer ticket pages.
+- Build agent ticket management pages.
+- Build administrator pages.
+- Connect frontend components to backend APIs.
+
+### Phase 5 — Testing and Review
+
+- Perform unit and API testing.
+- Test role-based permissions.
+- Validate ticket lifecycle behavior.
+- Fix identified defects.
+- Review documentation and deployment readiness.
+
+## ❓ Open Questions
+
+The following decisions need to be confirmed before implementation:
+
+- Which features are mandatory for the MVP?
+- Can support agents view all tickets or only assigned tickets?
+- Can customers reopen resolved tickets?
+- Which ticket statuses and transitions are permitted?
+- Are internal notes required?
+- Are file attachments included in the first release?
+- Which reports are required?
+- How should ticket assignment and reassignment work?
+- Which authentication and token-management approach will be used?
+- Where will uploaded files be stored?
+- Which deployment environment will be used?
+
+## 🤝 Contribution Guidelines
+
+Before contributing:
+
+1. Review the approved requirements and architecture.
+2. Create a branch for the change.
+3. Follow the established naming and coding conventions.
+4. Validate inputs and enforce permissions.
+5. Add or update relevant tests.
+6. Update documentation when behavior changes.
+7. Submit a pull request describing the change and its verification.
+
+## 📌 Project Status
+
+**Current stage: Planning — Pending Senior Review**
+
+SupportDesk is being prepared as a structured customer support ticket management system. This README documents the proposed architecture, data model, workflow, and development plan.
+
+The diagrams are conceptual design references. They should be reviewed and approved before being treated as final implementation specifications.
 
 ---
 
-## ⚠️ Important Project Note
-
-This document is a self-generated working draft based on the project details currently available. It is **not evidence of senior approval**. Confirm business rules, permissions, priorities, technology decisions, schedule, and future features with the senior. Keep unconfirmed details marked as proposed until reviewed.
+<p align="center">
+  🎫 <strong>SupportDesk</strong>
+  <br/>
+  <em>Organize Requests. Track Progress. Improve Support.</em>
+</p>
