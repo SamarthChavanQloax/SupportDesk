@@ -1,9 +1,9 @@
 # SupportDesk Prompt Journal
 
-**Week:** 1  
-**Day:** 3 — LLMs & the 6-Box Prompt  
-**Date:** 23 October 2026  
-**Project:** SupportDesk — Customer Support Ticket Management System  
+**Week:** 1
+**Day:** 3 — LLMs & the 6-Box Prompt
+**Date:** 23 October 2026
+**Project:** SupportDesk — Customer Support Ticket Management System
 **Source files reviewed:** `SupportDesk_Repository_README.md` and `SupportDesk_PRD_Redesigned_Compressed.docx`
 
 > **Accuracy note:** The PRD and README both say that SupportDesk is still a proposal/draft awaiting senior review. The technology choices, MVP scope, priorities, workflow, and data model are not approved implementation requirements yet. This journal records the source-based analysis performed for this task and includes prompts that can be used or adapted. Before submitting it, make sure the “What I changed” and “How I checked” sections match the work you personally performed.
@@ -26,7 +26,7 @@
 
 - **Date:** 23 October 2026
 - **Goal:** Explain SupportDesk to a new intern using the supplied PRD and distinguish proposed requirements from approved decisions.
-- **Prompt used:**  
+- **Prompt used:**
   “You are helping a new intern understand SupportDesk. Summarize the supplied Product Requirements Document (PRD) using only information in that document. Organize the answer into product purpose, proposed users, proposed MVP scope, security expectations, and open questions. Clearly label proposals as unapproved, identify missing information, and do not invent requirements.”
 - **Summary of AI response:** The PRD describes a proposed web application for customers to submit and track support tickets, support agents to respond and manage assignment/priority/status, and administrators to manage access and review approved activity. Proposed MVP capabilities include authentication and role-based access, ticket creation and viewing, responses, assignment and priority, status/resolution, and limited administration/reporting if approved. The PRD says implementation should wait for senior approval.
 - **What I changed or rejected:** I would reject any summary that presents proposed features, priorities, status transitions, success targets, or technology choices as already approved.
@@ -41,22 +41,22 @@
 - **Goal:** Rewrite a vague coding request using the six-box structure without starting implementation before requirements are approved.
 - **Prompt used (improved 6-box version):**
 
-  **[1. CONTEXT]**  
+  **[1. CONTEXT]**
   Project: SupportDesk. The supplied PRD and repository README are drafts awaiting senior review. The PRD proposes React + Vite + Tailwind CSS for the frontend, Node.js + Express for the backend, and PostgreSQL for the database. Confirm the actual repository structure and approved stack before implementation.
 
-  **[2. GOAL]**  
+  **[2. GOAL]**
   Help define the ticket-creation behavior described by proposed requirement FR-03 and user story US-01. The proposed behavior is to validate required fields, create a ticket, and show a unique reference after successful creation.
 
-  **[3. CONSTRAINTS / GUARDRAILS]**  
+  **[3. CONSTRAINTS / GUARDRAILS]**
   Do not write production code yet. Use only source-supported requirements. Do not invent required fields, reference format, API response shapes, status values, or validation limits. Ask questions about gaps. Respect server-side validation and authorization expectations.
 
-  **[4. EXAMPLES]**  
+  **[4. EXAMPLES]**
   The PRD’s US-01 says that a signed-in customer submitting valid required fields should receive a created ticket and its reference. Missing or invalid required fields should produce understandable validation feedback and must not create a ticket. This is a proposed acceptance criterion, not an approved commitment.
 
-  **[5. OUTPUT FORMAT]**  
+  **[5. OUTPUT FORMAT]**
   First list the source-supported requirements, then the unresolved questions, then a short implementation plan. Do not provide code until the senior-approved requirements and scope are confirmed.
 
-  **[6. CHECKS]**  
+  **[6. CHECKS]**
   Identify relevant positive, validation-failure, and authorization test cases. Separate suggested tests from tests actually run, and state what has not been verified.
 
 - **Summary of AI response:** The improved prompt scopes the task to ticket creation and connects it to PRD items FR-03, FR-04, FR-15, and US-01. It also asks for clarification before coding.
@@ -70,7 +70,7 @@
 
 - **Date:** 23 October 2026
 - **Goal:** Check whether the project overview and proposed technical direction are stated consistently and safely.
-- **Prompt used:**  
+- **Prompt used:**
   “Compare the supplied SupportDesk README and PRD. Report only claims supported by those files. Identify consistent details, unresolved decisions, and any wording that could make a proposal sound approved. Do not resolve open questions by guessing. Return a table with: topic, evidence in the documents, status, and action needed.”
 - **Summary of AI response:** Both documents describe SupportDesk as a proposed customer-support ticket-management system. Both propose a web stack of React/Vite/Tailwind CSS, Node.js/Express, and PostgreSQL. Both indicate that senior review is required before implementation. They identify candidate roles, ticket workflows, security expectations, and potential reports, while leaving decisions such as final status transitions, permissions, data rules, success targets, and approved scope unresolved.
 - **What I changed or rejected:** I would reject any interpretation that the stack or MVP is final. I would also avoid treating README diagrams, data entities, example API routes, and candidate acceptance scenarios as proof that those features have been approved or implemented.
@@ -83,7 +83,7 @@
 
 - **Date:** 23 October 2026
 - **Goal:** Separate documented expectations from assumptions and produce a verification plan.
-- **Prompt used:**  
+- **Prompt used:**
   “Using only the supplied SupportDesk PRD and README, make three lists: (1) source-supported proposed requirements, (2) unresolved questions/assumptions, and (3) verification steps. Include security and privacy checks, especially whether a customer can access another customer’s ticket and whether protected actions are authorized on the server. Do not say a test passed unless test evidence is provided.”
 - **Summary of AI response:** Source-supported proposed expectations include server-side authorization, restricting customers to permitted tickets, input validation, clear error feedback, and agreed role-based access. Verification scenarios proposed by the PRD include checking that unauthorized ticket access is denied, valid ticket creation returns a reference, invalid required fields do not create a ticket, and critical ticket flows pass agreed tests. These are proposed checks; no test execution evidence was supplied by the documents.
 - **What I changed or rejected:** I would reject statements such as “security is implemented,” “all tests pass,” or “the ticket workflow is approved” because the documents describe expectations and proposed tests rather than implementation results.
@@ -105,3 +105,61 @@
 - [ ] Confirm no secrets, credentials, `.env` values, customer data, or confidential company information are included.
 
 **Reminder:** The supplied SupportDesk PRD and README remain drafts pending senior review. Do not treat proposed requirements, architecture, or tests as approved or implemented without evidence.
+
+---
+
+# Week 1 – Day 4: Git, GitHub & Repository Structure
+
+**Date:** 3 November 2026
+**Project:** SupportDesk
+
+## Entry 6 – Inspecting an existing GitHub repository
+
+- **Goal:** Understand the existing repository before making changes.
+- **Prompt used:** "Guide me through the next step of Day 4. My SupportDesk repository already exists and I have GitHub access."
+- **Summary of AI response:** The repository should be inspected before making changes. Git status, current branch, remote configuration and existing files should be checked.
+- **What I changed or corrected:** Initially, I ran Git commands from an empty parent directory. After cloning the repository, I moved into the actual repository directory.
+- **Why I changed it:** Git commands must be executed inside the repository or one of its subdirectories.
+- **How I checked the result:** Used `git status`, `git branch --show-current`, `git remote -v`, `Get-ChildItem` and `git log`.
+- **What I learned:** GitHub hosts repositories, while Git manages version history locally.
+- **Follow-up question:** How can I inspect commit history to understand changes made by other contributors?
+
+## Entry 7 – Creating a feature branch and monorepo structure
+
+- **Goal:** Create the initial SupportDesk monorepo without modifying the main branch.
+- **Prompt used:** "Guide me step by step through creating the repository structure for the Day 4 assignment."
+- **Summary of AI response:** Create a separate working branch, preserve existing documentation, create the required directories and use `.gitkeep` files to track empty directories.
+- **What I changed or corrected:** Created the feature branch `samarth`, migrated `doc/` to `docs/`, and created the required application and supporting directories.
+- **Why I changed it:** The repository needed to follow the Day 4 roadmap while preserving the existing PRD and Prompt Journal.
+- **How I checked the result:** Used `git branch --show-current`, `git status --short`, `Get-ChildItem` and `tree /F`.
+- **What I learned:** Feature branches isolate changes from the main branch. Git tracks files rather than empty directories.
+- **Follow-up question:** How does Git detect file renames during a commit?
+
+## Entry 8 – Git configuration and environment-file protection
+
+- **Goal:** Configure repository hygiene and prevent accidental commits of local environment files.
+- **Prompt used:** "Help me configure `.gitignore` and `.env.example` for the SupportDesk monorepo without including real credentials."
+- **Summary of AI response:** `.gitignore` excludes dependencies, build outputs, environment files, logs and local editor files. `.env.example` documents illustrative environment variables without real credentials.
+- **What I changed or corrected:** Created the root `.gitignore` and `.env.example`. Removed trailing spaces from the database example.
+- **Why I changed it:** Generated files and local credentials should not be committed. Example configuration should remain safe to share.
+- **How I checked the result:** Used `Get-Content .gitignore`, `Get-Content .env.example`, `git check-ignore .env` and `git check-ignore .env.example`.
+- **What I learned:** `.gitignore` protects matching untracked files from being added accidentally, but it does not automatically remove files that are already tracked.
+- **Follow-up question:** How should environment variables be validated when the actual application configuration is implemented?
+
+---
+
+## Day 4 self-review
+
+- [ ] Git and GitHub fundamentals understood.
+- [ ] Repository structure reviewed.
+- [ ] Feature branch and repository skeleton created.
+- [ ] README reviewed and updated.
+- [ ] Three Git-related Prompt Journal entries added.
+- [ ] Git diff reviewed.
+- [ ] First commit created.
+- [ ] Feature branch pushed.
+- [ ] First Pull Request opened.
+- [ ] Lead-provided merge-conflict exercise completed or recorded as pending.
+- [ ] EOD report prepared.
+
+**Reminder:** The SupportDesk technology stack and architecture remain subject to project documentation and senior approval. Do not present proposed configuration as finalized.
