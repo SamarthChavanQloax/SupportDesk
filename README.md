@@ -810,186 +810,85 @@ Testing tools should be finalized after the development stack and repository str
 
 ## 📁 Proposed Repository Structure
 
-The following directory structure is a starting proposal, not an existing implementation guarantee.
+The following structure represents the initial SupportDesk monorepo skeleton created during Week 1, Day 4. The directories are present as placeholders; application implementation will follow after the project scope and technical decisions are confirmed by the project lead.
 
 ```text
-
 SupportDesk/
-│
-├── README.md
-├── .gitignore
-├── .editorconfig
-├── .env.example
-│
-├── docs/
-│   ├── PRD/
-│   │   └── SupportDesk-PRD.docx
-│   ├── diagrams/
-│   │   ├── er-diagram.png
-│   │   ├── class-diagram.png
-│   │   ├── use-case-diagram.png
-│   │   └── data-flow-diagram.png
+├── apps/
 │   ├── api/
-│   │   └── API-Specification.md
-│   ├── database/
-│   │   └── database-design.md
-│   ├── testing/
-│   │   └── test-plan.md
-│   └── decisions/
-│       └── architecture-decisions.md
-│
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   │   ├── common/
-│   │   │   └── ui/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   ├── tickets/
-│   │   │   ├── assignments/
-│   │   │   ├── responses/
-│   │   │   ├── attachments/
-│   │   │   ├── users/
-│   │   │   └── reports/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── utils/
-│   │   ├── styles/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── package.json
-│   ├── .env.example
-│   └── .gitignore
-│
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── database.js
-│   │   │   └── environment.js
-│   │   ├── middleware/
-│   │   │   ├── auth.middleware.js
-│   │   │   ├── role.middleware.js
-│   │   │   ├── error.middleware.js
-│   │   │   └── not-found.middleware.js
-│   │   ├── modules/
-│   │   │   ├── auth/
-│   │   │   │   ├── auth.routes.js
-│   │   │   │   ├── auth.controller.js
-│   │   │   │   ├── auth.service.js
-│   │   │   │   └── auth.validation.js
-│   │   │   ├── users/
-│   │   │   ├── roles/
-│   │   │   ├── tickets/
-│   │   │   ├── assignments/
-│   │   │   ├── responses/
-│   │   │   ├── attachments/
-│   │   │   ├── history/
-│   │   │   ├── reports/
-│   │   │   └── ai/                  # Future AI integration
-│   │   │       ├── ai.routes.js
-│   │   │       ├── ai.controller.js
-│   │   │       ├── ai.service.js
-│   │   │       └── ai.validation.js
-│   │   ├── routes/
-│   │   │   └── index.js
-│   │   ├── validators/
-│   │   ├── utils/
-│   │   ├── app.js
-│   │   └── server.js
-│   ├── tests/
-│   │   ├── unit/
-│   │   └── integration/
-│   ├── package.json
-│   ├── .env.example
-│   └── .gitignore
-│
-├── database/
-│   ├── migrations/
-│   ├── seeds/
-│   └── README.md
-│
-├── tests/
-│   └── e2e/
-│
-└── .github/
-    ├── ISSUE_TEMPLATE/
-    └── pull_request_template.md
-
+│   │   └── .gitkeep
+│   ├── web/
+│   │   └── .gitkeep
+│   └── mobile/
+│       └── .gitkeep
+├── agents/
+│   └── .gitkeep
+├── automation/
+│   └── n8n/
+│       └── .gitkeep
+├── postman/
+│   └── .gitkeep
+├── infra/
+│   └── .gitkeep
+├── docs/
+│   ├── prompt-journal.md
+│   └── SupportDesk_PRD_Redesigned_Compressed.docx
+├── .github/
+│   └── workflows/
+│       └── .gitkeep
+├── .gitignore
+├── .env.example
+└── README.md
 ```
 
-The final structure may be simplified or expanded based on the approved project scope and development conventions.
+### Directory Purposes
+
+| Directory | Purpose |
+|---|---|
+| `apps/api/` | Reserved for the future backend API application. |
+| `apps/web/` | Reserved for the future web application. |
+| `apps/mobile/` | Reserved for the future mobile application. |
+| `agents/` | Reserved for future AI agent development. |
+| `automation/n8n/` | Reserved for exported n8n workflows. |
+| `postman/` | Reserved for API collections and safe environment examples. |
+| `infra/` | Reserved for infrastructure and deployment assets. |
+| `docs/` | Contains project documentation, the PRD, and Prompt Journal. |
+| `.github/workflows/` | Reserved for future GitHub Actions workflows. |
+
+The `.gitkeep` files keep otherwise-empty directories visible in Git. They are placeholders, not application code.
+
+This is the initial repository skeleton required for Day 4. The final application structure, technology choices, and architecture remain subject to project lead review and approval.
 
 ## 🚀 Getting Started
 
-**Prerequisites for the proposed stack:**
+### Current Repository Status
 
-- Node.js and npm.
-- PostgreSQL.
-- Git.
-- A code editor.
-- Postman or another API client for testing.
+The repository currently contains the initial monorepo directory skeleton and project documentation. The application directories are placeholders; the API, web, and mobile applications have not yet been initialized.
+
+The proposed technology stack and setup requirements remain pending project lead review. Therefore, dependency installation, database setup, and application start commands are not available for this skeleton yet.
 
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/SamarthChavanQloax/SupportDesk.git
 cd SupportDesk
 ```
 
-Replace `<repository-url>` with the actual repository URL.
+### 2. Review the Repository
 
-### 2. Configure the Backend
+- Read this README and the project PRD in `docs/`.
+- Review the current repository structure.
+- Review `docs/prompt-journal.md` for the development prompt journal.
+- Check `.env.example` for illustrative configuration variable names.
+- Confirm the approved stack and setup instructions with the project lead before configuring a local development environment.
 
-```bash
-cd backend
-npm install
-```
+### 3. Environment and Secret Safety
 
-Configure the required environment variables using the project's approved configuration.
+The root `.env.example` contains illustrative values only. Create a private local `.env` file only when the required variables and their values have been confirmed.
 
-Example `.env.example`:
+Never commit real credentials, tokens, passwords, or private environment files. The root `.gitignore` excludes local `.env` files while allowing `.env.example` to be tracked.
 
-```dotenv
-PORT=5000
-DATABASE_URL=
-JWT_SECRET=
-NODE_ENV=development
-```
-
-Use appropriate local development values in your private `.env` file. Never commit actual credentials or secrets.
-
-### 3. Configure the Frontend
-
-```bash
-cd ../frontend
-npm install
-```
-
-### 4. Start Development Servers
-
-The exact scripts depend on the `package.json` files created during implementation.
-
-Typical commands, once the corresponding scripts exist, may be:
-
-```bash
-# Backend
-cd backend
-npm run dev
-```
-
-```bash
-# Frontend — in a separate terminal
-cd frontend
-npm run dev
-```
-
-These are setup examples; they will work only after the project files, scripts, database configuration, and required dependencies have been created.
+Application-specific installation and run instructions will be added when the corresponding applications, package scripts, and approved configuration are implemented.
 
 ## 📅 Proposed Development Roadmap
 
