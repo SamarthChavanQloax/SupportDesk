@@ -1,0 +1,154 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SupportDesk Core Models
+enum Role {
+  customer
+  agent
+  admin
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  waiting_on_customer
+  resolved
+  closed
+}
+
+enum TicketPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  passwordHash String?  @map("password_hash")
+  role         Role     @default(customer)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  createdTickets  Ticket[]     @relation("CustomerTickets")
+  assignedTickets Ticket[]     @relation("AssignedTickets")
+  comments        Comment[]
+  attachments     Attachment[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Ticket {
+  id          Int            @id @default(autoincrement())
+  reference   String         @unique
+  title       String
+  description String
+  status      TicketStatus   @default(open)
+  priority    TicketPriority @default(P3)
+  category    String?
+  slaDueTime  DateTime?      @map("sla_due_time")
+  customerId  Int            @map("customer_id")
+  customer    User           @relation("CustomerTickets", fields: [customerId], references: [id], onDelete: Restrict)
+  assigneeId  Int?           @map("assignee_id")
+  assignee    User?          @relation("AssignedTickets", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  resolvedAt  DateTime?      @map("resolved_at")
+  closedAt    DateTime?      @map("closed_at")
+  deletedAt   DateTime?      @map("deleted_at")
+
+  comments    Comment[]
+  attachments Attachment[]
+  ticketTags  TicketTag[]
+  auditLogs   AuditLog[]
+
+  @@index([customerId])
+  @@index([assigneeId, status])
+  @@index([status, priority])
+  @@map("tickets")
+}
+
+model Comment {
+  id         Int       @id @default(autoincrement())
+  ticketId   Int       @map("ticket_id")
+  ticket     Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   Int       @map("author_id")
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  body       String
+  isInternal Boolean   @default(false) @map("is_internal")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  attachments Attachment[]
+
+  @@index([ticketId, createdAt])
+  @@map("comments")
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ticketTags TicketTag[]
+
+  @@map("tags")
+}
+
+model TicketTag {
+  ticketId   Int      @map("ticket_id")
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  tagId      Int      @map("tag_id")
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([ticketId, tagId])
+  @@index([tagId])
+  @@map("ticket_tags")
+}
+
+model Attachment {
+  id         Int      @id @default(autoincrement())
+  ticketId   Int      @map("ticket_id")
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  commentId  Int?     @map("comment_id")
+  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  uploaderId Int      @map("uploader_id")
+  uploader   User     @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  fileName   String   @map("file_name")
+  filePath   String   @map("file_path")
+  fileSize   Int      @map("file_size")
+  mimeType   String   @map("mime_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([ticketId])
+  @@map("attachments")
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  ticketId     Int      @map("ticket_id")
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId      Int?     @map("actor_id")
+  actor        User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action       String
+  fieldChanged String?  @map("field_changed")
+  oldValue     String?  @map("old_value")
+  newValue     String?  @map("new_value")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([ticketId, createdAt])
+  @@map("audit_logs")
+}

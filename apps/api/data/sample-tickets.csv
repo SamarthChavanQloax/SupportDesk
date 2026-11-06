@@ -1,0 +1,51 @@
+reference,title,description,status,priority,category,slaDueTimeHours,customerEmail,assigneeEmail
+TCK-2026-0001,Cannot sign in to customer portal,Customer receiving error 401 when entering valid credentials,open,P1,Authentication,4,alice.customer@example.com,dave.agent@example.com
+TCK-2026-0002,Invoice generation failing,Monthly recurring subscription invoice not generated for October,in_progress,P2,Billing,12,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0003,Reset password link expired,User requested password reset link but link shows expired immediately,resolved,P3,Account,24,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0004,Slow dashboard page response,Dashboard takes more than 10 seconds to load analytics widgets,in_progress,P2,Performance,8,alice.customer@example.com,dave.agent@example.com
+TCK-2026-0005,Update primary billing address,Need to change corporate address on file for upcoming renewal,closed,P4,Billing,48,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0006,Webhook delivery failure,Webhook endpoints returning 500 error on ticket events,open,P1,Integration,4,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0007,Export to CSV contains garbled text,UTF-8 characters in customer names appear garbled in CSV download,waiting_on_customer,P3,Export,24,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0008,Email notifications not delivered,Customer did not receive ticket creation confirmation email,open,P2,Notifications,12,bob.customer@example.com,
+TCK-2026-0009,Two-factor authentication setup issue,Authenticator QR code is not scanning properly on mobile device,resolved,P2,Security,8,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0010,Request for Dark Mode support,Feature request to add dark theme preference in user settings,open,P4,UI/UX,72,alice.customer@example.com,
+TCK-2026-0011,Broken image links on helpdesk center,Public documentation images returning 404 in Chrome browser,in_progress,P3,Documentation,24,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0012,Payment gateway timeout during checkout,Credit card processor intermittently timing out on payment submission,open,P1,Billing,4,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0013,Duplicate notification emails received,Agent receiving duplicate notifications for each comment posted,closed,P3,Notifications,24,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0014,Add new team members to workspace,Admin requesting addition of 5 support agents to the workspace,resolved,P3,Account,24,bob.customer@example.com,dave.agent@example.com
+TCK-2026-0015,API rate limit reached unexpectedly,Enterprise client hitting 429 status code during batch sync,in_progress,P2,API,8,carol.customer@example.com,emma.agent@example.com
+TCK-2026-0016,Mobile app crashes on ticket attachment upload,iOS application terminates abruptly when selecting PDF larger than 5MB,open,P1,Mobile,4,alice.customer@example.com,dave.agent@example.com
+TCK-2026-0017,Incorrect tax calculation on foreign orders,VAT rate for EU customer calculated at 0% instead of standard rate,waiting_on_customer,P2,Billing,12,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0018,Session timeout occurs too quickly,Session expires after 5 minutes of inactivity instead of 30 minutes,open,P3,Security,24,carol.customer@example.com,
+TCK-2026-0019,SSO integration with Okta failing,SAML response validation error: Invalid signature from Identity Provider,in_progress,P1,Security,4,alice.customer@example.com,dave.agent@example.com
+TCK-2026-0020,Cannot filter tickets by tag in agent view,Tag filter dropdown in agent portal shows blank options,closed,P3,UI/UX,24,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0021,Ticket priority change not saved,Changing priority from P3 to P1 does not persist after page refresh,resolved,P2,Core,8,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0022,Help center search returns irrelevant results,Search query for password reset returns unrelated billing guides,open,P4,Search,48,alice.customer@example.com,
+TCK-2026-0023,Audit log missing assignee update events,Reassigning a ticket to another agent is not logged in ticket history,in_progress,P2,Audit,12,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0024,Customer account lockout after 3 attempts,User locked out despite entering correct password on third attempt,resolved,P2,Account,8,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0025,SSL certificate warning on custom domain,Custom support portal domain displays browser SSL warning,open,P1,Infrastructure,4,alice.customer@example.com,dave.agent@example.com
+TCK-2026-0026,Export to PDF formatting truncated,Printed ticket report cuts off the right margin on A4 paper,waiting_on_customer,P4,Export,48,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0027,Internal comments visible to customer,Internal agent note was emailed to customer by mistake,closed,P1,Privacy,2,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0028,Slack bot notification integration down,Slack incoming webhook stopped sending alert messages to #support-leads,in_progress,P2,Integration,8,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0029,Cannot re-open closed ticket within grace period,Customer cannot reply to reopen ticket within 48 hours of closure,open,P3,Workflow,24,bob.customer@example.com,
+TCK-2026-0030,Spam tickets flood submission endpoint,Captcha verification missing on public contact form resulting in spam,in_progress,P2,Security,8,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0031,User profile picture not updating,Uploading PNG image shows success but previous avatar persists,resolved,P4,Account,48,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0032,Zendesk ticket data import error,CSV migration from Zendesk failed at row 1500 with date parse error,waiting_on_customer,P3,Migration,24,bob.customer@example.com,dave.agent@example.com
+TCK-2026-0033,Database connection spike on report generation,Weekly report query causing high connection pool exhaustion,closed,P2,Performance,12,carol.customer@example.com,emma.agent@example.com
+TCK-2026-0034,Ticket status not updating on customer reply,Customer response does not automatically transition status to in_progress,open,P2,Workflow,12,alice.customer@example.com,dave.agent@example.com
+TCK-2026-0035,Typo in welcome onboarding email,Welcome email template has misspelled company name in signature,resolved,P4,Content,72,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0036,Pagination broken on closed tickets list,Clicking Next Page stays on page 1 for closed tickets view,in_progress,P3,UI/UX,24,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0037,Webhook signatures failing HMAC verification,Signatures generated by server do not match expected secret key,open,P1,Security,4,alice.customer@example.com,
+TCK-2026-0038,Agent response collision detection missing,Two agents typing replies simultaneously overwrite ticket state,in_progress,P2,Collaboration,8,bob.customer@example.com,emma.agent@example.com
+TCK-2026-0039,Refund request for accidental duplicate charge,Customer was charged twice for annual enterprise plan,resolved,P1,Billing,4,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0040,Markdown formatting stripped in ticket body,Code blocks and bold text rendered as plain text in agent view,waiting_on_customer,P3,UI/UX,24,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0041,Add SLA timer warning badges,Visual countdown badge requested on tickets nearing breach threshold,open,P3,UI/UX,24,bob.customer@example.com,
+TCK-2026-0042,GDPR right to be forgotten data deletion,User requesting complete removal of personal data under GDPR,in_progress,P2,Compliance,12,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0043,Custom ticket fields not appearing in API response,API endpoint GET /tickets/id does not return custom metadata fields,closed,P2,API,12,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0044,Keyboard shortcuts not working in Firefox,Ctrl+Enter shortcut to send comment fails on Firefox on Windows,resolved,P4,UI/UX,48,bob.customer@example.com,dave.agent@example.com
+TCK-2026-0045,Attachment download fails with signature expired,AWS S3 presigned URL expiration set too short causing 403 errors,open,P2,Storage,8,carol.customer@example.com,dave.agent@example.com
+TCK-2026-0046,Auto-assignment round robin skipping agents,Round-robin assignment algorithm assigns tickets disproportionately,in_progress,P2,Routing,12,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0047,Timezone discrepancy in ticket timestamps,Timestamps displayed in UTC instead of customer local timezone,waiting_on_customer,P4,Localization,48,bob.customer@example.com,dave.agent@example.com
+TCK-2026-0048,Bulk ticket status update fails on selection over 20,Selecting 25 tickets and changing status returns batch payload error,open,P2,BulkAction,8,carol.customer@example.com,
+TCK-2026-0049,Customer satisfaction survey CSAT link broken,Feedback survey link in resolution email leads to 404 error page,resolved,P3,Surveys,24,alice.customer@example.com,emma.agent@example.com
+TCK-2026-0050,Live chat widget disconnecting on route change,Chat session terminates when navigating between documentation tabs,closed,P3,Chat,24,bob.customer@example.com,dave.agent@example.com
