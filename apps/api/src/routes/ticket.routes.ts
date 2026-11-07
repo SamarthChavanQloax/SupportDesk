@@ -32,3 +32,4 @@ router.patch(
 router.delete('/:id', validateParams(ticketIdParamSchema), deleteTicket);
 
 export { router as ticketRouter };
+export default router;
