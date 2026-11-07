@@ -247,5 +247,91 @@
 - [x] CSV-to-JSON standalone conversion tool created and executed.
 - [x] Database seeded with foundational users, tags, and exactly 50 sample tickets.
 - [x] Visual Mermaid ER diagram created in `docs/supportdesk-erd.md`.
-- [ ] Feature branch created and changes committed with clean Git history.
-- [ ] Final EOD Report prepared in `docs/day-8/SupportDesk_Day8_EOD_Report.md`.
+- [x] Feature branch created and changes committed with clean Git history.
+- [x] Final EOD Report prepared in `docs/day-8/SupportDesk_Day8_EOD_Report.md`.
+
+---
+
+# Week 2 – Day 3 (Overall Day 9): API Skeleton and MVC in Practice
+
+**Date:** 7 November 2026
+**Project:** SupportDesk — Customer Support Ticket Management System
+**Theme:** Build and verify a production-ready Express/TypeScript REST API utilizing the four-layer architecture (Routes → Controllers → Services → Repositories → Prisma).
+
+---
+
+## Entry 12 – Four-Layer MVC Architecture and Prisma Isolation
+
+- **Date:** 7 November 2026
+- **Goal:** Design and enforce a strict four-layer separation of concerns where Prisma database queries are isolated exclusively inside repository classes.
+- **Prompt used (6-box format):**
+  - **[1. CONTEXT]:** SupportDesk Express + TypeScript backend API using Prisma ORM with PostgreSQL.
+  - **[2. GOAL]:** Propose a layered folder and file architecture for Ticket CRUD operations: `Routes -> Controllers -> Services -> Repositories -> Prisma`.
+  - **[3. CONSTRAINTS]:** Zero Prisma imports outside `repositories/`. Controllers must not perform database queries. Services must not depend on Express `req` or `res`. Routes must contain only route definitions, middlewares, and controller bindings.
+  - **[4. EXAMPLES]:** Route receives `GET /tickets/:id` -> Controller extracts numerical `id` -> Service validates ticket existence and business logic -> Repository runs `prisma.ticket.findFirst` -> returns entity back up the chain.
+  - **[5. OUTPUT FORMAT]:** Architectural responsibility matrix and TypeScript type definitions for the DTO and Repository layers.
+  - **[6. CHECKS]:** Run static analysis/grep to verify that `@prisma/client` is imported only inside `repositories/`.
+- **Summary of AI response:** Outlined the 4-layer structure. Highlighted that Prisma types (`TicketStatus`, `TicketPriority`, `Ticket`) should be re-exported by `ticket.repository.ts` so controllers and services remain decoupled from the Prisma client package.
+- **What I changed or rejected:** Accepted the layer boundaries. Proactively rejected having controllers import Prisma enums directly; instead, re-exported all needed domain types from `ticket.repository.ts`.
+- **Why I changed it:** Prevents architectural leakage and ensures that an audit grep for `@prisma/client` strictly matches only files in `apps/api/src/repositories/`.
+- **How I checked the result:** Executed PowerShell script scanning all files in `apps/api/src` for `@prisma/client`. Only `prisma.client.ts` and `ticket.repository.ts` contained matches.
+- **What I learned:** Clean layered boundaries make controllers trivial to unit test with mocks because services have no HTTP coupling.
+- **Follow-up question or unresolved assumption:** How will future authentication context (e.g. current user role) be passed to services without coupling them to Express request objects?
+
+---
+
+## Entry 13 – Standard Response Envelope and Central Error Handling
+
+- **Date:** 7 November 2026
+- **Goal:** Implement an unvarying standard response envelope `{ data, error, meta }` and central error middleware handling 400, 404, and safe 500 responses without leaking secrets or stack traces.
+- **Prompt used (6-box format):**
+  - **[1. CONTEXT]:** SupportDesk REST API with Express 5 and TypeScript strict mode.
+  - **[2. GOAL]:** Build a central Express error handler and uniform response wrapper for both success and error payloads.
+  - **[3. CONSTRAINTS]:** Every endpoint must return `{ data, error, meta }`. Stack traces, raw SQL queries, and Prisma error codes must never be leaked to the client. Malformed JSON must produce a clean 400 response.
+  - **[4. EXAMPLES]:** Success: `{ "data": { ... }, "error": null, "meta": {} }`. Error: `{ "data": null, "error": { "code": "NOT_FOUND", "message": "Ticket with ID 999 not found" }, "meta": {} }`.
+  - **[5. OUTPUT FORMAT]:** `errorHandler` middleware and `AppError` class hierarchy.
+  - **[6. CHECKS]:** Test with valid requests, 400 invalid inputs, 404 non-existent IDs, and a deliberate 500 endpoint (`GET /test/error`).
+- **Summary of AI response:** Provided `AppError` hierarchy (`NotFoundError`, `BadRequestError`, `ValidationError`), response utilities, and an Express error-handling middleware that catches `ZodError` and generic `Error`.
+- **What I changed or rejected:** Added specific handling for Express `SyntaxError` (when clients send invalid JSON in request bodies) to return HTTP 400 with `INVALID_JSON` rather than an unhandled 500 error.
+- **Why I changed it:** Malformed client JSON is a client-side error (400), not an internal server malfunction (500).
+- **How I checked the result:** Tested `GET /test/error` (returned safe 500 with sanitized message) and tested malformed JSON payload (returned 400).
+- **What I learned:** Centralized error handling guarantees security compliance because no raw database exceptions or internal stack traces reach API clients.
+- **Follow-up question or unresolved assumption:** Should client-side error codes be cataloged in an API contract document for frontend integration?
+
+---
+
+## Entry 14 – Defensive Zod Validation and Express 5 Compatibility
+
+- **Date:** 7 November 2026
+- **Goal:** Implement robust schema validation for environment variables and request bodies, parameters, and query strings using Zod in TypeScript strict mode.
+- **Prompt used (6-box format):**
+  - **[1. CONTEXT]:** Express 5 application with TypeScript 5.6 strict mode and Zod.
+  - **[2. GOAL]:** Create reusable middleware for validating `req.body`, `req.params`, and `req.query`.
+  - **[3. CONSTRAINTS]:** Express 5 makes `req.query` a read-only getter on `IncomingMessage`. Validation middlewares must validate without attempting illegal reassignments that trigger runtime TypeError.
+  - **[4. EXAMPLES]:** `validateParams(ticketIdParamSchema)` ensures `:id` is a positive integer string. `validateBody(createTicketSchema)` requires `title`, `description`, `customerId`.
+  - **[5. OUTPUT FORMAT]:** Middleware functions `validateBody`, `validateParams`, `validateQuery` and Zod schemas.
+  - **[6. CHECKS]:** Verify compilation with `npx tsc --noEmit` and integration tests against all endpoints.
+- **Summary of AI response:** Designed Zod schemas and validation middlewares. Noted that Express 5 requires parsing without direct reassignment of getter properties on `IncomingMessage`.
+- **What I changed or rejected:** Refactored `validateParams` and `validateQuery` to execute `schema.parse()` without reassigning getter properties. Added a safe `parseId` helper in `ticket.controller.ts` to handle Express 5's `string | string[]` param types under strict mode.
+- **Why I changed it:** In Express 5, `req.params` and `req.query` types differ from Express 4; directly assigning to `req.query` throws `TypeError: Cannot set property query of #<IncomingMessage> which has only a getter`.
+- **How I checked the result:** Ran all 11 automated integration tests in `test-api.ts`. All 11 passed with 100% success rate.
+- **What I learned:** Framework major version changes (Express 4 to 5) alter internal property descriptors; validation layers must be written defensively against getter-only properties.
+- **Follow-up question or unresolved assumption:** How should pagination query parameters (`page`, `limit`) be standardized across all future endpoints?
+
+---
+
+## Day 9 self-review
+
+- [x] Express + TypeScript API initialized with TypeScript strict mode.
+- [x] Zod environment validation configured (`PORT`, `NODE_ENV`, `DATABASE_URL`).
+- [x] Request logging middleware implemented with sensitive parameter masking.
+- [x] Central error handler implemented (400, 404, safe 500).
+- [x] `GET /health` endpoint implemented and verified.
+- [x] Ticket CRUD endpoints implemented (`GET /tickets`, `GET /tickets/:id`, `POST /tickets`, `PATCH /tickets/:id`, `DELETE /tickets/:id`).
+- [x] Four-layer architecture verified (Routes → Controllers → Services → Repositories → Prisma).
+- [x] Zero Prisma imports verified outside `repositories/`.
+- [x] Standard response envelope `{ data, error, meta }` verified on all endpoints.
+- [x] Postman collection created at `postman/SupportDesk_Day9_API_Skeleton.postman_collection.json`.
+- [x] Integration test suite executed (11 / 11 tests passing).
+- [x] Clean Git branch `feature/day-9-api-mvc` and conventional commit created.
+- [x] Comprehensive Day 9 EOD report prepared in `docs/day-9/SupportDesk_Day9_EOD_Report.md`.
