@@ -1,0 +1,493 @@
+{
+  "info": {
+    "_postman_id": "e8d2a14b-5c3e-4b6a-9f12-7d8a9e4c2b31",
+    "name": "SupportDesk – Day 9 API Testing",
+    "description": "Official End-to-End API Test Collection for SupportDesk Day 9. Contains automated assertions for status codes, envelope schemas, CRUD lifecycle persistence, validation errors, and controlled error handling.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Test 1: GET /health",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has standard envelope structure', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('data');",
+              "    pm.expect(body).to.have.property('error');",
+              "    pm.expect(body).to.have.property('meta');",
+              "    pm.expect(body.error).to.be.null;",
+              "});",
+              "",
+              "pm.test('Health status is ok with valid service metadata', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.status).to.eql('ok');",
+              "    pm.expect(body.data.service).to.eql('SupportDesk API');",
+              "    pm.expect(body.data).to.have.property('timestamp');",
+              "    pm.expect(body.data).to.have.property('uptime');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 2: GET /tickets (List Tickets)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has standard envelope structure', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('data');",
+              "    pm.expect(body).to.have.property('error');",
+              "    pm.expect(body.error).to.be.null;",
+              "    pm.expect(Array.isArray(body.data)).to.be.true;",
+              "});",
+              "",
+              "pm.test('Returns populated ticket list with meta count', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.length).to.be.at.least(1);",
+              "    pm.expect(body.meta).to.have.property('total');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 3: POST /tickets (Step 1 - Create Ticket)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has standard structure and error is null', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('data');",
+              "    pm.expect(body.error).to.be.null;",
+              "});",
+              "",
+              "pm.test('Created ticket contains valid ID, reference, and timestamps', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.have.property('id');",
+              "    pm.expect(body.data.id).to.be.a('number');",
+              "    pm.expect(body.data).to.have.property('reference');",
+              "    pm.expect(body.data.reference).to.match(/^TCK-\\d{4}-/);",
+              "    pm.expect(body.data.title).to.eql('Postman E2E Test Ticket: VPN Authentication Failure');",
+              "    pm.expect(body.data.status).to.eql('open');",
+              "    pm.expect(body.data.priority).to.eql('P2');",
+              "    ",
+              "    // Save dynamic environment variables for subsequent tests",
+              "    pm.environment.set('ticketId', body.data.id);",
+              "    pm.environment.set('ticketRef', body.data.reference);",
+              "    pm.environment.set('createdTitle', body.data.title);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Postman E2E Test Ticket: VPN Authentication Failure\",\n  \"description\": \"Remote employees unable to authenticate via OpenVPN gateway.\",\n  \"customerId\": 1,\n  \"priority\": \"P2\",\n  \"status\": \"open\",\n  \"category\": \"Networking\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 4: GET /tickets/:id (Step 2 - Retrieve Created Ticket)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Retrieved ticket matches submitted creation data', function () {",
+              "    const body = pm.response.json();",
+              "    const expectedId = pm.environment.get('ticketId');",
+              "    const expectedRef = pm.environment.get('ticketRef');",
+              "    const expectedTitle = pm.environment.get('createdTitle');",
+              "    ",
+              "    pm.expect(body.data.id).to.eql(expectedId);",
+              "    pm.expect(body.data.reference).to.eql(expectedRef);",
+              "    pm.expect(body.data.title).to.eql(expectedTitle);",
+              "    pm.expect(body.data.status).to.eql('open');",
+              "    pm.expect(body.data.priority).to.eql('P2');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "{{ticketId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 5: PATCH /tickets/:id (Step 3 - Update Ticket)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Updated fields match PATCH payload and unmodified fields persist', function () {",
+              "    const body = pm.response.json();",
+              "    const expectedId = pm.environment.get('ticketId');",
+              "    ",
+              "    pm.expect(body.data.id).to.eql(expectedId);",
+              "    pm.expect(body.data.title).to.eql('Postman E2E Test Ticket: VPN Gateway Resolved (Title Updated)');",
+              "    pm.expect(body.data.status).to.eql('in_progress');",
+              "    pm.expect(body.data.priority).to.eql('P1');",
+              "    pm.expect(body.data.description).to.eql('Remote employees unable to authenticate via OpenVPN gateway.');",
+              "    ",
+              "    pm.environment.set('updatedTitle', body.data.title);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Postman E2E Test Ticket: VPN Gateway Resolved (Title Updated)\",\n  \"status\": \"in_progress\",\n  \"priority\": \"P1\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "{{ticketId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 6: GET /tickets/:id (Step 4 - Retrieve Updated Ticket)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Retrieved record confirms persistence of updated values', function () {",
+              "    const body = pm.response.json();",
+              "    const expectedUpdatedTitle = pm.environment.get('updatedTitle');",
+              "    ",
+              "    pm.expect(body.data.title).to.eql(expectedUpdatedTitle);",
+              "    pm.expect(body.data.status).to.eql('in_progress');",
+              "    pm.expect(body.data.priority).to.eql('P1');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "{{ticketId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 7: GET /tickets/:id (Invalid ID - 400 Validation Error)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Returns structured VALIDATION_ERROR envelope', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.be.null;",
+              "    pm.expect(body.error).to.not.be.null;",
+              "    pm.expect(body.error.code).to.eql('VALIDATION_ERROR');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/invalid-id",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "invalid-id"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 8: GET /tickets/:id (Nonexistent ID - 404 Not Found)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test('Returns structured NOT_FOUND envelope', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.be.null;",
+              "    pm.expect(body.error).to.not.be.null;",
+              "    pm.expect(body.error.code).to.eql('NOT_FOUND');",
+              "    pm.expect(body.error.message).to.contain('not found');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/999999",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "999999"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 9: POST /tickets (Invalid Body - 400 Validation Error)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Returns detailed field validation issues', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.be.null;",
+              "    pm.expect(body.error.code).to.eql('VALIDATION_ERROR');",
+              "    pm.expect(Array.isArray(body.error.details)).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"AB\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 10: PATCH /tickets/:id (Nonexistent ID - 404 Not Found)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test('Returns structured NOT_FOUND envelope on patch', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.be.null;",
+              "    pm.expect(body.error.code).to.eql('NOT_FOUND');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"resolved\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tickets/999999",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "999999"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 11: GET /test/error (Controlled 500 Error Handler Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 500 Internal Server Error', function () {",
+              "    pm.response.to.have.status(500);",
+              "});",
+              "",
+              "pm.test('Response does not leak stack traces or internal secrets', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.be.null;",
+              "    pm.expect(body.error.code).to.eql('INTERNAL_SERVER_ERROR');",
+              "    pm.expect(body.error.message).to.eql('An unexpected error occurred. Please try again later.');",
+              "    pm.expect(body).to.not.have.property('stack');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/test/error",
+          "host": ["{{baseUrl}}"],
+          "path": ["test", "error"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test 12: DELETE /tickets/:id (Soft-Delete Ticket)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Soft-delete response confirms deletion flag', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.have.property('deleted', true);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "{{ticketId}}"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

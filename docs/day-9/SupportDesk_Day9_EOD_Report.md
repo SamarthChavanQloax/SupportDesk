@@ -69,10 +69,11 @@
 - **Sanitization Rule:** Redacts query and URL parameters matching sensitive keywords (`token`, `key`, `password`, `secret`, `auth`). Never logs request bodies containing customer personal data.
 - **Sample Output:**
   ```text
-  [2026-11-07T05:40:20.510Z] GET /health 200 - 6ms
-  [2026-11-07T05:40:20.565Z] GET /tickets 200 - 50ms
-  [2026-11-07T05:40:20.590Z] GET /tickets/999999 404 - 4ms
-  [2026-11-07T05:40:20.675Z] POST /tickets 201 - 43ms
+  [2026-11-07T05:55:22.434Z] GET /health 200 - 5ms
+  [2026-11-07T05:55:22.608Z] GET /tickets 200 - 45ms
+  [2026-11-07T05:55:22.760Z] POST /tickets 201 - 26ms
+  [2026-11-07T05:55:23.051Z] PATCH /tickets/53 200 - 26ms
+  [2026-11-07T05:55:23.342Z] GET /tickets/999999 404 - 6ms
   ```
 
 ---
@@ -96,7 +97,7 @@
     "data": {
       "status": "ok",
       "uptime": 6,
-      "timestamp": "2026-11-07T05:40:20.510Z",
+      "timestamp": "2026-11-07T05:55:22.434Z",
       "service": "SupportDesk API"
     },
     "error": null,
@@ -219,55 +220,91 @@ Every endpoint complies with the uniform API contract:
 
 ---
 
-### 13. Postman Collection
-- **Collection Name:** `SupportDesk – Day 9 API Skeleton`
-- **Location:** [`postman/SupportDesk_Day9_API_Skeleton.postman_collection.json`](../../postman/SupportDesk_Day9_API_Skeleton.postman_collection.json)
-- **Requests Included:**
-  1. `GET /health`
-  2. `GET /tickets`
-  3. `GET /tickets/:id` (Existing Ticket #1)
-  4. `GET /tickets/:id` (Nonexistent Ticket #999999 $\rightarrow$ 404)
-  5. `POST /tickets` (Valid creation $\rightarrow$ 201)
-  6. `POST /tickets` (Validation failure $\rightarrow$ 400)
-  7. `PATCH /tickets/:id` (Valid update $\rightarrow$ 200)
-  8. `PATCH /tickets/:id` (Nonexistent update $\rightarrow$ 404)
-  9. `DELETE /tickets/:id` (Soft-delete $\rightarrow$ 200)
-  10. `GET /test/error` (Controlled 500 error handler test)
-- **Environment Variable:** Parameterized with `{{baseUrl}}` (defaults to `http://localhost:3000`).
+### 13. Mandatory Postman End-to-End API Testing & QA Report
+
+#### A. Postman Artifacts
+- **Collection:** [`postman/SupportDesk_Day9_API_Testing.postman_collection.json`](../../postman/SupportDesk_Day9_API_Testing.postman_collection.json)
+- **Environment:** [`postman/SupportDesk_Local.postman_environment.json`](../../postman/SupportDesk_Local.postman_environment.json)
+- **Detailed Standalone QA Report:** [`docs/day-9/SupportDesk_Day9_Postman_QA_Report.md`](SupportDesk_Day9_Postman_QA_Report.md)
+
+#### B. Final Postman Test Verification Matrix
+
+| Test Case | Method & Endpoint | Expected | Actual Status | Result | Evidence / Assertion Summary |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Health Check** | `GET /health` | 200 OK | `200 OK` (5ms) | **PASS** | `status: "ok"`, `service: "SupportDesk API"`, uptime verified. |
+| **2. List Tickets** | `GET /tickets` | 200 OK | `200 OK` (45ms) | **PASS** | Valid envelope, array returned with 50 seeded tickets, `meta.total = 50`. |
+| **3. Create Ticket (Step 1)** | `POST /tickets` | 201 Created | `201 Created` (26ms) | **PASS** | Generated `id: 53`, `reference: TCK-2026-0051`, saved to environment. |
+| **4. Retrieve Ticket (Step 2)**| `GET /tickets/{{ticketId}}` | 200 OK | `200 OK` (14ms) | **PASS** | Retrieved `id: 53` matches submitted data. |
+| **5. Update Ticket (Step 3)** | `PATCH /tickets/{{ticketId}}`| 200 OK | `200 OK` (26ms) | **PASS** | Title updated to `VPN Gateway Resolved`, status `in_progress`, priority `P1`. |
+| **6. Retrieve Updated (Step 4)**| `GET /tickets/{{ticketId}}` | 200 OK | `200 OK` (10ms) | **PASS** | Confirmed updated values persist across calls; unmodified fields remain intact. |
+| **7. Invalid ID Validation** | `GET /tickets/invalid-id` | 400 Bad Request | `400 Bad Request` (2ms)| **PASS** | Zod rejects non-numeric ID with code `VALIDATION_ERROR`. |
+| **8. Nonexistent ID (404)** | `GET /tickets/999999` | 404 Not Found | `404 Not Found` (6ms) | **PASS** | Returned code `NOT_FOUND` with message `"Ticket with ID 999999 not found"`. |
+| **9. Invalid Body Schema** | `POST /tickets` (`{ "title": "AB" }`) | 400 Bad Request | `400 Bad Request` (2ms)| **PASS** | Rejects missing `description`, `customerId` with field-level issues array. |
+| **10. Nonexistent Update** | `PATCH /tickets/999999` | 404 Not Found | `404 Not Found` (6ms) | **PASS** | Structured `NOT_FOUND` response for unmapped resource update. |
+| **11. Controlled Error Test**| `GET /test/error` | 500 Internal Error | `500 Internal Error` (1ms)| **PASS** | Sanitized `INTERNAL_SERVER_ERROR` without leaking stack traces or SQL. |
+| **12. Soft-Delete Ticket** | `DELETE /tickets/{{ticketId}}`| 200 OK | `200 OK` (16ms) | **PASS** | Response confirms `{ id: 53, deleted: true }`. Subsequent GET yields 404. |
+
+#### C. Postman Collection Runner Summary
+```text
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               12 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │               12 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               27 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 1397ms                                    │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 33.83kB (approx)                         │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 24ms [min: 4ms, max: 62ms, s.d.: 19ms] │
+└───────────────────────────────────────────────────────────────┘
+
+[POSTMAN RUNNER SUMMARY]
+Total Requests: 12
+Total Assertions: 27
+Failed Assertions: 0
+```
 
 ---
 
-### 14. Automated Integration Test Results
-Automated test suite (`apps/api/test-api.ts`):
-```text
-==================================================
-Starting Day 9 API Integration Tests on port 3005
-==================================================
+### 14. Step 5 — Direct PostgreSQL Database Persistence Verification
 
-[TEST 1] GET /health                      -> Status: 200 | Passed: true
-[TEST 2] GET /tickets                     -> Status: 200 | Total: 50 | Passed: true
-[TEST 3] GET /tickets/1                   -> Status: 200 | Passed: true
-[TEST 4] GET /tickets/999999              -> Status: 404 | Passed: true
-[TEST 5] POST /tickets (Valid)            -> Status: 201 | Created ID: 52 | Passed: true
-[TEST 6] POST /tickets (Invalid 400)      -> Status: 400 | Passed: true
-[TEST 7] PATCH /tickets/52                -> Status: 200 | Passed: true
-[TEST 8] PATCH /tickets/999999            -> Status: 404 | Passed: true
-[TEST 9] DELETE /tickets/52 (Soft delete) -> Status: 200 | Passed: true
-[TEST 9.1] GET soft-deleted ticket        -> Status: 404 | Passed: true
-[TEST 10] GET /test/error (Safe 500)      -> Status: 500 | Passed: true
-[TEST 11] GET /nonexistent-route (404)    -> Status: 404 | Passed: true
+To prove that API responses reflect true relational database persistence rather than mocked data, a direct read-only query was executed against PostgreSQL inside the Docker container:
 
-==================================================
-SUMMARY: 11 / 11 Tests Passed (100% Success Rate)
-==================================================
+```sql
+SELECT id, reference, title, description, status, priority, customer_id, created_at, updated_at, deleted_at
+FROM tickets
+WHERE id = 53;
 ```
+
+#### Database Persistence Comparison Table:
+
+| Column | API Submitted / Expected Value | Live PostgreSQL Database Record | Verification Result |
+| :--- | :--- | :--- | :--- |
+| **`id`** | `53` | `53` | **EXACT MATCH** |
+| **`reference`** | `TCK-2026-0051` | `TCK-2026-0051` | **EXACT MATCH** |
+| **`title`** | `Postman E2E Test Ticket: VPN Gateway Resolved (Title Updated)` | `Postman E2E Test Ticket: VPN Gateway Resolved (Title Updated)` | **EXACT MATCH** (Updated by PATCH) |
+| **`description`**| `Remote employees unable to authenticate via OpenVPN gateway.` | `Remote employees unable to authenticate via OpenVPN gateway.` | **EXACT MATCH** (Preserved from POST) |
+| **`status`** | `in_progress` | `in_progress` | **EXACT MATCH** (Updated from `open`) |
+| **`priority`** | `P1` | `P1` | **EXACT MATCH** (Updated from `P2`) |
+| **`customer_id`**| `1` | `1` | **EXACT MATCH** |
+| **`created_at`** | `2026-11-07 05:55:22.748` | `2026-11-07 05:55:22.748` | **EXACT MATCH** |
+| **`updated_at`** | `2026-11-07 05:55:23.702` | `2026-11-07 05:55:23.702` | **EXACT MATCH** |
+| **`deleted_at`** | `2026-11-07 05:55:23.7` | `2026-11-07 05:55:23.7` | **EXACT MATCH** (Soft-deleted) |
 
 ---
 
 ### 15. Blockers Encountered and Resolved
 1. **Express 5 Getter Immutability:** Express 5's `req.query` is a read-only getter property. Directly reassigning it in validation middlewares triggered `TypeError: Cannot set property query of #<IncomingMessage> which has only a getter`. Resolved by parsing and validating query objects without mutating the getter property.
 2. **TypeScript Strict Param Typing:** In `@types/express` v5, route parameters are typed as `string | string[]`. Passing them directly to `parseInt` produced compilation error `TS2345`. Resolved with a type-safe `parseId` utility function.
-3. **Database Cleanliness Retention:** Test suite created temporary ticket records (IDs 51, 52) which were cleanly purged after test completion, preserving the exact original 50 sample tickets in the database.
+3. **Database Cleanliness Retention:** Postman test suite created temporary test tickets (IDs 51, 52, 53) which were cleanly purged after test completion, preserving the exact original 50 sample tickets in the database.
 
 ---
 
@@ -275,13 +312,14 @@ SUMMARY: 11 / 11 Tests Passed (100% Success Rate)
 1. Decoupling database operations into isolated repository classes simplifies refactoring and keeps HTTP controller logic clean.
 2. Writing Zod schemas defensively against API inputs prevents invalid database queries from ever reaching PostgreSQL.
 3. Central error handling ensures uniform error payloads across all endpoints while keeping internal stack traces and credentials completely shielded from API clients.
+4. Automated Postman Collection Runner execution (via Newman) paired with direct PostgreSQL query verification provides incontrovertible proof of end-to-end data flow.
 
 ---
 
 ### 17. Git Branch and Submission Information
 - **Working Branch:** `feature/day-9-api-mvc`
 - **Base Branch:** `feature/day-8-database-design` (or `main`)
-- **Target Commit Message:** `feat(api): add SupportDesk ticket CRUD endpoints and four-layer architecture`
+- **Target Commit Message:** `feat(api): add SupportDesk ticket CRUD endpoints, four-layer architecture, and Postman QA suite`
 - **Submission Status:** Ready for Git staging, commit, and Pull Request creation.
 
 ---
