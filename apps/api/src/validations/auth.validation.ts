@@ -32,3 +32,4 @@ export const loginSchema = z.object({
 
 export type RegisterDTO = z.infer<typeof registerSchema>;
 export type LoginDTO = z.infer<typeof loginSchema>;
+

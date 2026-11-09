@@ -11,3 +11,4 @@ router.post('/login', loginRateLimiter, validateBody(loginSchema), authControlle
 
 export { router as authRouter };
 export default router;
+
