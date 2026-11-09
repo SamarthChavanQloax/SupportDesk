@@ -25,7 +25,7 @@ export async function getTickets(req: Request, res: Response, next: NextFunction
       filters.assigneeId = parseInt(req.query.assigneeId, 10);
     }
 
-    const tickets = await ticketService.getAllTickets(filters);
+    const tickets = await ticketService.getAllTickets(filters, req.user);
     res.status(200).json(successResponse(tickets, { total: tickets.length }));
   } catch (error) {
     next(error);
@@ -35,7 +35,7 @@ export async function getTickets(req: Request, res: Response, next: NextFunction
 export async function getTicketById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const ticketId = parseId(req.params.id);
-    const ticket = await ticketService.getTicketById(ticketId);
+    const ticket = await ticketService.getTicketById(ticketId, req.user);
     res.status(200).json(successResponse(ticket));
   } catch (error) {
     next(error);
@@ -44,7 +44,7 @@ export async function getTicketById(req: Request, res: Response, next: NextFunct
 
 export async function createTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const newTicket = await ticketService.createTicket(req.body);
+    const newTicket = await ticketService.createTicket(req.body, req.user);
     res.status(201).json(successResponse(newTicket));
   } catch (error) {
     next(error);
@@ -54,7 +54,7 @@ export async function createTicket(req: Request, res: Response, next: NextFuncti
 export async function updateTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const ticketId = parseId(req.params.id);
-    const updatedTicket = await ticketService.updateTicket(ticketId, req.body);
+    const updatedTicket = await ticketService.updateTicket(ticketId, req.body, req.user);
     res.status(200).json(successResponse(updatedTicket));
   } catch (error) {
     next(error);
@@ -64,7 +64,7 @@ export async function updateTicket(req: Request, res: Response, next: NextFuncti
 export async function deleteTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const ticketId = parseId(req.params.id);
-    const result = await ticketService.deleteTicket(ticketId);
+    const result = await ticketService.deleteTicket(ticketId, req.user);
     res.status(200).json(successResponse(result));
   } catch (error) {
     next(error);

@@ -88,12 +88,15 @@ export class TicketRepository {
   }
 
   /**
-   * Find a single ticket by its numerical ID
+   * Find a single ticket by its numerical ID, optionally scoped to a customer
    */
-  async findById(id: number, includeDeleted = false): Promise<Ticket | null> {
+  async findById(id: number, includeDeleted = false, customerId?: number): Promise<Ticket | null> {
     const where: Record<string, unknown> = { id };
     if (!includeDeleted) {
       where.deletedAt = null;
+    }
+    if (customerId !== undefined) {
+      where.customerId = customerId;
     }
 
     return prisma.ticket.findFirst({

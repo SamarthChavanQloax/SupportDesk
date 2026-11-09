@@ -40,7 +40,7 @@ async function main() {
         name: u.name,
         role: u.role,
         isActive: true,
-        passwordHash: '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyUIXe/QLu7mOV1lE9m6wZ5Xz9uTzNKi' // Fictional test hash
+        passwordHash: '$2b$10$0zt3lghca3eu2wfUgzdUF.0aID3p9wbGE9axmSIKHxTIUGsaKIKDi' // bcrypt hash for 'Password123!'
       }
     });
     userMap.set(u.email, user.id);

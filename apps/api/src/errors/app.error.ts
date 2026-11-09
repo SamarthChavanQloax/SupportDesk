@@ -38,6 +38,24 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message: string = 'Authentication required', details?: unknown) {
+    super(401, 'UNAUTHORIZED', message, details);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message: string = 'Access forbidden', details?: unknown) {
+    super(403, 'FORBIDDEN', message, details);
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message: string = 'Resource conflict', details?: unknown) {
+    super(409, 'CONFLICT', message, details);
+  }
+}
+
 export class InternalServerError extends AppError {
   constructor(message: string = 'Internal server error') {
     super(500, 'INTERNAL_SERVER_ERROR', message, undefined, false);

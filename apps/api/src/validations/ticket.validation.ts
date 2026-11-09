@@ -39,7 +39,8 @@ export const createTicketSchema = z.object({
   customerId: z
     .number()
     .int('customerId must be an integer')
-    .positive('customerId must be positive'),
+    .positive('customerId must be positive')
+    .optional(),
   priority: z.enum(['P1', 'P2', 'P3', 'P4']).default('P3').optional(),
   status: z
     .enum(['open', 'in_progress', 'waiting_on_customer', 'resolved', 'closed'])
