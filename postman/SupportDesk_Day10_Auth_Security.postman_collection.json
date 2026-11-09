@@ -1,0 +1,580 @@
+{
+  "info": {
+    "_postman_id": "day10-auth-security-collection-2026",
+    "name": "SupportDesk — Day 10 Auth & Security Testing",
+    "description": "Automated Postman test suite verifying Day 10 authentication, password hashing, JWT authorization, RBAC, ticket ownership, Helmet, CORS, and rate limiting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "AUTH-19: Helmet Security Headers & GET /health",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Helmet headers are present', function () {",
+              "    pm.response.to.have.header('x-content-type-options');",
+              "    pm.response.to.have.header('x-frame-options');",
+              "});",
+              "pm.test('Standard response envelope verified', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('data');",
+              "    pm.expect(json).to.have.property('error', null);",
+              "    pm.expect(json).to.have.property('meta');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-17: CORS Allowlist Check (Approved Origin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('CORS Access-Control-Allow-Origin matches approved origin', function () {",
+              "    pm.expect(pm.response.headers.get('access-control-allow-origin')).to.eql('http://localhost:5173');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "http://localhost:5173",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-01: Register Valid Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Safe user returned with default customer role', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.have.property('id');",
+              "    pm.expect(json.data.role).to.eql('customer');",
+              "    pm.expect(json.data).to.not.have.property('passwordHash');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Asha Customer\",\n  \"email\": \"asha.customer.day10@example.test\",\n  \"password\": \"ExampleOnly!234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-02: Duplicate Registration Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 409 Conflict', function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "pm.test('Error code is CONFLICT', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.code).to.eql('CONFLICT');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Asha Duplicate\",\n  \"email\": \"asha.customer.day10@example.test\",\n  \"password\": \"ExampleOnly!234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-03: Invalid Registration Input (Short Password)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Validation error code returned', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"A\",\n  \"email\": \"invalid-email\",\n  \"password\": \"short\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-05: Login Valid Customer Credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('JWT accessToken and safe user details returned', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.have.property('accessToken');",
+              "    pm.expect(json.data.user.email).to.eql('alice.customer@example.com');",
+              "    pm.environment.set('customerToken', json.data.accessToken);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"alice.customer@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-05b: Login Valid Agent Credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Agent accessToken returned with agent role', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.have.property('accessToken');",
+              "    pm.expect(json.data.user.role).to.eql('agent');",
+              "    pm.environment.set('agentToken', json.data.accessToken);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"dave.agent@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-06: Login Wrong Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "pm.test('Generic error message returned', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.message).to.eql('Invalid email or password');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"alice.customer@example.com\",\n  \"password\": \"WrongPassword999!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-07: Login Unknown Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "pm.test('Generic error matches wrong-password message exactly', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.message).to.eql('Invalid email or password');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"unknown-user@example.test\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-08: Protected Route Without Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "pm.test('Error code is UNAUTHORIZED', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.code).to.eql('UNAUTHORIZED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-09: Protected Route With Malformed Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer malformed-token-xyz"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-11: Customer Accesses Permitted Route",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Customer receives tickets array scoped to their account', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(Array.isArray(json.data)).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-12: Wrong Role (Customer calls Agent-Only DELETE)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "pm.test('Error code is FORBIDDEN', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.code).to.eql('FORBIDDEN');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "1"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-13: Customer Retrieves Own Ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Own ticket retrieved successfully', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data.id).to.eql(1);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "1"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-14: Customer Retrieves Other User's Ticket (No Leakage)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "pm.test('Error code is NOT_FOUND', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error.code).to.eql('NOT_FOUND');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/2",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "2"]
+        }
+      }
+    },
+    {
+      "name": "AUTH-15: Agent Ticket Visibility (Views All Tickets)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Agent sees full ticket inventory (50 tickets)', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.meta.total).to.be.at.least(50);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{agentToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tickets",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"]
+        }
+      }
+    }
+  ]
+}

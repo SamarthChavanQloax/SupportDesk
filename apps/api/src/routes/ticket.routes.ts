@@ -17,19 +17,33 @@ import {
   createTicketSchema,
   updateTicketSchema,
 } from '../validations/ticket.validation';
+import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/', validateQuery(ticketQuerySchema), getTickets);
-router.get('/:id', validateParams(ticketIdParamSchema), getTicketById);
-router.post('/', validateBody(createTicketSchema), createTicket);
+// All ticket endpoints require valid authentication
+router.use(requireAuth);
+
+// Customer, Agent, and Admin can list tickets (service scopes customer to own tickets only)
+router.get('/', requireRole('customer', 'agent', 'admin'), validateQuery(ticketQuerySchema), getTickets);
+
+// Customer, Agent, and Admin can read a ticket by ID (service enforces customer ownership)
+router.get('/:id', requireRole('customer', 'agent', 'admin'), validateParams(ticketIdParamSchema), getTicketById);
+
+// Customer, Agent, and Admin can create a ticket
+router.post('/', requireRole('customer', 'agent', 'admin'), validateBody(createTicketSchema), createTicket);
+
+// Customer, Agent, and Admin can update a ticket (service enforces customer ownership)
 router.patch(
   '/:id',
+  requireRole('customer', 'agent', 'admin'),
   validateParams(ticketIdParamSchema),
   validateBody(updateTicketSchema),
   updateTicket
 );
-router.delete('/:id', validateParams(ticketIdParamSchema), deleteTicket);
+
+// Privileged route: Only Agent and Admin can soft-delete tickets (Customers receive 403 Forbidden)
+router.delete('/:id', requireRole('agent', 'admin'), validateParams(ticketIdParamSchema), deleteTicket);
 
 export { router as ticketRouter };
 export default router;

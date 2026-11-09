@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { healthRouter } from './health.routes';
 import { ticketRouter } from './ticket.routes';
+import { authRouter } from './auth.routes';
 
 const apiRouter = Router();
 
 apiRouter.use('/health', healthRouter);
+apiRouter.use('/auth', authRouter);
 apiRouter.use('/tickets', ticketRouter);
 
 // Safe, controlled test endpoint for verifying central 500 handler without damaging the database
