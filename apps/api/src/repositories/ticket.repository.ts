@@ -8,6 +8,11 @@ export interface TicketFilterOptions {
   priority?: TicketPriority;
   customerId?: number;
   assigneeId?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
   includeDeleted?: boolean;
 }
 
@@ -36,9 +41,9 @@ export interface UpdateTicketData {
 
 export class TicketRepository {
   /**
-   * Retrieve tickets with optional filtering
+   * Helper to construct Prisma WHERE query matching security and filter rules
    */
-  async findMany(filters: TicketFilterOptions = {}): Promise<Ticket[]> {
+  private buildWhereClause(filters: TicketFilterOptions): Record<string, unknown> {
     const where: Record<string, unknown> = {};
 
     if (!filters.includeDeleted) {
@@ -61,10 +66,30 @@ export class TicketRepository {
       where.assigneeId = filters.assigneeId;
     }
 
+    if (filters.search && filters.search.trim()) {
+      const term = filters.search.trim();
+      where.OR = [
+        { title: { contains: term, mode: 'insensitive' } },
+        { description: { contains: term, mode: 'insensitive' } },
+        { reference: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+
+    return where;
+  }
+
+  /**
+   * Retrieve tickets with optional filtering
+   */
+  async findMany(filters: TicketFilterOptions = {}): Promise<Ticket[]> {
+    const where = this.buildWhereClause(filters);
+    const sortBy = filters.sortBy || 'createdAt';
+    const sortOrder = filters.sortOrder || 'desc';
+
     return prisma.ticket.findMany({
       where,
       orderBy: {
-        createdAt: 'desc',
+        [sortBy]: sortOrder,
       },
       include: {
         customer: {
@@ -85,6 +110,66 @@ export class TicketRepository {
         },
       },
     });
+  }
+
+  /**
+   * Retrieve paginated tickets with total count matching exact scope
+   */
+  async findManyWithPagination(filters: TicketFilterOptions = {}): Promise<{
+    tickets: Ticket[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const where = this.buildWhereClause(filters);
+    const sortBy = filters.sortBy || 'createdAt';
+    const sortOrder = filters.sortOrder || 'desc';
+
+    const page = filters.page && filters.page > 0 ? filters.page : 1;
+    const limit = filters.limit && filters.limit > 0 ? filters.limit : 10;
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    const [tickets, total] = await Promise.all([
+      prisma.ticket.findMany({
+        where,
+        skip,
+        take,
+        orderBy: {
+          [sortBy]: sortOrder,
+        },
+        include: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+          assignee: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      }),
+      prisma.ticket.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    return {
+      tickets,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   /**

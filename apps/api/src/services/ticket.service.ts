@@ -29,7 +29,7 @@ export interface UpdateTicketDTO {
 
 export class TicketService {
   /**
-   * Retrieve all tickets matching optional query filters with ownership scoping
+   * Retrieve all tickets matching optional query filters with ownership scoping & pagination
    * Security Rule:
    * - Customers can see ONLY their own tickets (customerId = currentUser.id).
    * - Agents and Admins can see all tickets.
@@ -41,7 +41,7 @@ export class TicketService {
       scopedFilters.customerId = currentUser.id;
     }
 
-    return ticketRepository.findMany(scopedFilters);
+    return ticketRepository.findManyWithPagination(scopedFilters);
   }
 
   /**

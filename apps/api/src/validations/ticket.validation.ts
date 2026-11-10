@@ -9,7 +9,22 @@ export const ticketIdParamSchema = z.object({
     .pipe(z.number().int().positive('Ticket ID must be greater than 0')),
 });
 
+export const sortableTicketFields = ['createdAt', 'updatedAt', 'priority', 'status', 'title'] as const;
+export type SortableTicketField = (typeof sortableTicketFields)[number];
+
 export const ticketQuerySchema = z.object({
+  page: z
+    .string()
+    .regex(/^\d+$/, 'Page must be a positive integer')
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().int().min(1, 'Page must be at least 1'))
+    .default(1),
+  limit: z
+    .string()
+    .regex(/^\d+$/, 'Limit must be a positive integer')
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().int().min(1, 'Limit must be at least 1').max(100, 'Limit cannot exceed 100'))
+    .default(10),
   status: z
     .enum(['open', 'in_progress', 'waiting_on_customer', 'resolved', 'closed'])
     .optional(),
@@ -24,7 +39,12 @@ export const ticketQuerySchema = z.object({
     .regex(/^\d+$/, 'assigneeId must be an integer')
     .transform((v) => parseInt(v, 10))
     .optional(),
+  search: z.string().trim().max(100).optional(),
+  sortBy: z.enum(sortableTicketFields).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
+
+export type ParsedTicketQuery = z.infer<typeof ticketQuerySchema>;
 
 export const createTicketSchema = z.object({
   title: z

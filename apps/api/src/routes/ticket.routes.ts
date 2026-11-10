@@ -7,6 +7,10 @@ import {
   deleteTicket,
 } from '../controllers/ticket.controller';
 import {
+  getComments,
+  createComment,
+} from '../controllers/comment.controller';
+import {
   validateParams,
   validateQuery,
   validateBody,
@@ -17,6 +21,7 @@ import {
   createTicketSchema,
   updateTicketSchema,
 } from '../validations/ticket.validation';
+import { createCommentSchema } from '../validations/comment.validation';
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -44,6 +49,22 @@ router.patch(
 
 // Privileged route: Only Agent and Admin can soft-delete tickets (Customers receive 403 Forbidden)
 router.delete('/:id', requireRole('agent', 'admin'), validateParams(ticketIdParamSchema), deleteTicket);
+
+// Comments endpoints: list and create comments on a ticket
+router.get(
+  '/:id/comments',
+  requireRole('customer', 'agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  getComments
+);
+
+router.post(
+  '/:id/comments',
+  requireRole('customer', 'agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  validateBody(createCommentSchema),
+  createComment
+);
 
 export { router as ticketRouter };
 export default router;

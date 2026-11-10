@@ -12,6 +12,12 @@ export async function getTickets(req: Request, res: Response, next: NextFunction
   try {
     const filters: TicketFilterOptions = {};
 
+    if (typeof req.query.page === 'string') {
+      filters.page = parseInt(req.query.page, 10);
+    }
+    if (typeof req.query.limit === 'string') {
+      filters.limit = parseInt(req.query.limit, 10);
+    }
     if (typeof req.query.status === 'string') {
       filters.status = req.query.status as TicketStatus;
     }
@@ -24,9 +30,25 @@ export async function getTickets(req: Request, res: Response, next: NextFunction
     if (typeof req.query.assigneeId === 'string') {
       filters.assigneeId = parseInt(req.query.assigneeId, 10);
     }
+    if (typeof req.query.search === 'string') {
+      filters.search = req.query.search;
+    }
+    if (typeof req.query.sortBy === 'string') {
+      filters.sortBy = req.query.sortBy;
+    }
+    if (typeof req.query.sortOrder === 'string') {
+      filters.sortOrder = req.query.sortOrder as 'asc' | 'desc';
+    }
 
-    const tickets = await ticketService.getAllTickets(filters, req.user);
-    res.status(200).json(successResponse(tickets, { total: tickets.length }));
+    const result = await ticketService.getAllTickets(filters, req.user);
+    res.status(200).json(
+      successResponse(result.tickets, {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+      })
+    );
   } catch (error) {
     next(error);
   }

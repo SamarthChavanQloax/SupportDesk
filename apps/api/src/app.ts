@@ -1,6 +1,8 @@
 import express, { Application, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import openapiSpec from './docs/openapi.json';
 import { env } from './config/env';
 import { requestLogger } from './middlewares/logger.middleware';
 import { errorHandler } from './middlewares/error.middleware';
@@ -11,7 +13,11 @@ export function createApp(): Application {
   const app = express();
 
   // 1. Security Headers via Helmet (OWASP A05:2021 Security Misconfiguration)
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    })
+  );
 
   // 2. Strict CORS allowlist from validated environment configuration
   const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
@@ -37,7 +43,13 @@ export function createApp(): Application {
   // 4. Safe request logging middleware
   app.use(requestLogger);
 
-  // 5. Mount API Routes (accessible at /health, /auth, /tickets and /api/*)
+  // 5. Interactive OpenAPI Documentation served at /docs
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+  app.get('/docs.json', (_req: Request, res: Response) => {
+    res.json(openapiSpec);
+  });
+
+  // 6. Mount API Routes (accessible at /health, /auth, /tickets and /api/*)
   app.use('/', apiRouter);
   app.use('/api', apiRouter);
 
