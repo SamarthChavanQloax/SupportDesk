@@ -33,3 +33,4 @@ export function validateAndSanitizeTicketQuery(
     data: parseResult.data,
   };
 }
+

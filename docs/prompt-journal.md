@@ -59,3 +59,4 @@
 - **Why I changed it:** The OpenAPI documentation must reflect the exact reality of the implemented API without phantom endpoints or imaginary data models.
 - **How I checked the result:** Verified with Supertest integration tests in `src/__tests__/integration.test.ts` that `GET /docs/` returns HTTP 200 with Swagger UI assets, and `GET /docs.json` returns HTTP 200 with valid OpenAPI 3.0 JSON.
 - **What I learned:** Maintaining documentation as code alongside automated tests guarantees that documentation never drifts from production behavior.
+
