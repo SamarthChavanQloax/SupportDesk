@@ -235,6 +235,7 @@
           { "name": "limit", "in": "query", "description": "Items per page (1-100)", "schema": { "type": "integer", "default": 10 } },
           { "name": "status", "in": "query", "description": "Filter by ticket status", "schema": { "type": "string", "enum": ["open", "in_progress", "waiting_on_customer", "resolved", "closed"] } },
           { "name": "priority", "in": "query", "description": "Filter by priority", "schema": { "type": "string", "enum": ["P1", "P2", "P3", "P4"] } },
+          { "name": "customerId", "in": "query", "description": "Filter by customer ID (Agents/Admins only)", "schema": { "type": "integer" } },
           { "name": "assigneeId", "in": "query", "description": "Filter by assigned user ID", "schema": { "type": "integer" } },
           { "name": "search", "in": "query", "description": "Search term matched against title, description, and reference", "schema": { "type": "string" } },
           { "name": "sortBy", "in": "query", "description": "Field to sort by", "schema": { "type": "string", "enum": ["createdAt", "updatedAt", "priority", "status", "title"], "default": "createdAt" } },
