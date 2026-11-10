@@ -1,9 +1,17 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { z } from 'zod';
 
-// Load .env from apps/api directory or repository root
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load .env.test when NODE_ENV === 'test' (if present), otherwise load .env
+const testEnvPath = path.resolve(__dirname, '../../.env.test');
+const defaultEnvPath = path.resolve(__dirname, '../../.env');
+
+if (process.env.NODE_ENV === 'test' && fs.existsSync(testEnvPath)) {
+  dotenv.config({ path: testEnvPath, override: true });
+} else {
+  dotenv.config({ path: defaultEnvPath });
+}
 
 const envSchema = z.object({
   PORT: z

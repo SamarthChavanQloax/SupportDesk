@@ -154,5 +154,35 @@ describe('CommentService Unit Tests (Repositories Mocked)', () => {
         isInternal: true,
       });
     });
+
+    it('should throw NotFoundError when creating a comment on a non-existent ticket', async () => {
+      mockedTicketRepo.findById.mockResolvedValue(null);
+
+      const customer = { id: 5, email: 'alice@test.com', role: 'customer' };
+      await expect(
+        commentService.createComment(9999, { body: 'Comment on ghost ticket' }, customer)
+      ).rejects.toThrow(NotFoundError);
+      expect(mockedCommentRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('should propagate repository failure when finding comments throws database error', async () => {
+      mockedTicketRepo.findById.mockResolvedValue(createMockTicket({ customerId: 5 }));
+      mockedCommentRepo.findByTicketId.mockRejectedValue(new Error('PostgreSQL connection dropped'));
+
+      const customer = { id: 5, email: 'alice@test.com', role: 'customer' };
+      await expect(commentService.getComments(10, customer)).rejects.toThrow(
+        'PostgreSQL connection dropped'
+      );
+    });
+
+    it('should propagate repository failure when creating comment throws database error', async () => {
+      mockedTicketRepo.findById.mockResolvedValue(createMockTicket({ customerId: 5 }));
+      mockedCommentRepo.create.mockRejectedValue(new Error('Deadlock detected'));
+
+      const customer = { id: 5, email: 'alice@test.com', role: 'customer' };
+      await expect(
+        commentService.createComment(10, { body: 'Deadlock test' }, customer)
+      ).rejects.toThrow('Deadlock detected');
+    });
   });
 });

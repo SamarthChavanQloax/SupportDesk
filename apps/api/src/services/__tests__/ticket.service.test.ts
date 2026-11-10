@@ -277,4 +277,45 @@ describe('TicketService Unit Tests (Repository Mocked)', () => {
       await expect(ticketService.deleteTicket(999, adminUser)).rejects.toThrow(NotFoundError);
     });
   });
+
+  describe('Repository Failure Propagation', () => {
+    it('should propagate database failure when finding tickets with pagination', async () => {
+      mockedRepo.findManyWithPagination.mockRejectedValue(new Error('Connection timeout to DB'));
+
+      const agent = { id: 2, email: 'agent@test.com', role: 'agent' };
+      await expect(ticketService.getAllTickets({}, agent)).rejects.toThrow('Connection timeout to DB');
+    });
+
+    it('should propagate database failure when creating ticket', async () => {
+      mockedRepo.userExists.mockResolvedValue(true);
+      mockedRepo.count.mockResolvedValue(0);
+      mockedRepo.findByReference.mockResolvedValue(null);
+      mockedRepo.create.mockRejectedValue(new Error('PostgreSQL unique constraint violation'));
+
+      const customer = { id: 10, email: 'cust@test.com', role: 'customer' };
+      await expect(
+        ticketService.createTicket({ title: 'Bug', description: 'Desc' }, customer)
+      ).rejects.toThrow('PostgreSQL unique constraint violation');
+    });
+
+    it('should propagate database failure when updating ticket', async () => {
+      mockedRepo.findById.mockResolvedValue(createMockTicket());
+      mockedRepo.update.mockRejectedValue(new Error('DB lock acquisition failure'));
+
+      const agent = { id: 2, email: 'agent@test.com', role: 'agent' };
+      await expect(ticketService.updateTicket(1, { title: 'New' }, agent)).rejects.toThrow(
+        'DB lock acquisition failure'
+      );
+    });
+
+    it('should propagate database failure when soft-deleting ticket', async () => {
+      mockedRepo.findById.mockResolvedValue(createMockTicket());
+      mockedRepo.softDelete.mockRejectedValue(new Error('Foreign key cascade failure'));
+
+      const admin = { id: 1, email: 'admin@test.com', role: 'admin' };
+      await expect(ticketService.deleteTicket(1, admin)).rejects.toThrow(
+        'Foreign key cascade failure'
+      );
+    });
+  });
 });

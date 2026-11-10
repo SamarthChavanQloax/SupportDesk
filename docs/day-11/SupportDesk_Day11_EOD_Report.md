@@ -153,102 +153,49 @@ Before writing production logic, two pure functions were defined and tested firs
 
 ### 7.1 Test Suite Overview & Execution Metrics
 
-All unit and integration tests are automated using **Jest** and **Supertest** with strict TypeScript type-checking via `ts-jest`.
+All unit and integration tests are automated using **Jest** and **Supertest** against an isolated PostgreSQL test database (`supportdesk_test`) with strict TypeScript type-checking via `ts-jest`.
 
 ```text
 ================================================================================
-JEST AUTOMATED TEST EXECUTION SUMMARY
+JEST AUTOMATED TEST EXECUTION SUMMARY (TEST DATABASE: supportdesk_test)
 ================================================================================
 Test Suites: 6 passed, 6 total
-Tests:       52 passed, 52 total
+Tests:       79 passed, 79 total
 Snapshots:   0 total
-Time:        4.013 s
+Time:        11.96 s
 Exit Code:   0 (SUCCESS)
 ================================================================================
 ```
 
 ---
 
-### 7.2 Individual Test Case Results (52 / 52 Passed)
+### 7.2 Individual Test Case Results (79 / 79 Passed)
 
-#### Suite 1: Test-First Ticket Query Sanitization (`src/utils/__tests__/ticket-query.util.test.ts`)
-| Test ID | Test Description | Expected Behavior | Result |
-| :--- | :--- | :--- | :---: |
-| TQ-01 | Apply default pagination when query is empty | Default `page=1`, `limit=10`, `sortBy=createdAt`, `sortOrder=desc` | **PASS** |
-| TQ-02 | Parse valid string inputs into numbers | `'3'` and `'25'` parsed to numeric `3` and `25` | **PASS** |
-| TQ-03 | Reject invalid non-numeric or zero page values | Non-numeric or `< 1` rejected with validation error | **PASS** |
-| TQ-04 | Enforce upper limit bound ($\le 100$) | `limit=150` rejected | **PASS** |
-| TQ-05 | Enforce sortable field allowlist | Rejects unapproved fields like `password_hash` | **PASS** |
-| TQ-06 | Sanitize search parameter | Strips leading/trailing whitespace (`   login issue   `) | **PASS** |
-| TQ-07 | Validate status and priority enums | Accepts valid enums, rejects arbitrary strings | **PASS** |
+#### Suite 1: Test-First Ticket Query Sanitization (`src/utils/__tests__/ticket-query.util.test.ts`) - 7 Tests
+- All 7 tests passing: pagination bounds, string conversions, sort allowlisting, search sanitization, enum validation.
 
-#### Suite 2: Test-First Comment Role Visibility (`src/utils/__tests__/comment-visibility.util.test.ts`)
-| Test ID | Test Description | Expected Behavior | Result |
-| :--- | :--- | :--- | :---: |
-| CV-01 | Filter internal comments for customer role | Excludes all comments where `isInternal === true` | **PASS** |
-| CV-02 | Include all comments for agent role | Preserves both public and internal comments | **PASS** |
-| CV-03 | Include all comments for admin role | Preserves both public and internal comments | **PASS** |
-| CV-04 | Handle empty comments array | Returns `[]` without error | **PASS** |
+#### Suite 2: Test-First Comment Role Visibility (`src/utils/__tests__/comment-visibility.util.test.ts`) - 4 Tests
+- All 4 tests passing: customer internal note filtering, agent/admin visibility, empty handling.
 
-#### Suite 3: Ticket Service Unit Tests (`src/services/__tests__/ticket.service.test.ts`)
-*(Prisma repository completely mocked via `jest.mock('../../repositories/ticket.repository')`)*
-| Test ID | Test Description | Security / Business Rule Verified | Result |
-| :--- | :--- | :--- | :---: |
-| TS-01 | Scopes customer ticket queries | Automatically sets `customerId = req.user.id` | **PASS** |
-| TS-02 | Unconstrained agent/admin ticket queries | Does not overwrite `customerId` for agent or admin | **PASS** |
-| TS-03 | Query parameter propagation | Passes `search`, `sortBy`, `sortOrder`, `page`, `limit` to repo | **PASS** |
-| TS-04 | Customer reads own ticket | Allows customer to read ticket where `customerId` matches | **PASS** |
-| TS-05 | BOLA / IDOR protection | Returns `404 Not Found` if customer accesses foreign ticket | **PASS** |
-| TS-06 | Agent queries any ticket | Agents can read any customer's ticket without restriction | **PASS** |
-| TS-07 | Customer ticket creation | Auto-assigns `customerId` to current user (prevents tampering) | **PASS** |
-| TS-08 | Validate customer existence | Throws `BadRequestError` if customer ID not found in database | **PASS** |
-| TS-09 | Validate assignee existence | Throws `BadRequestError` if assignee ID not found in database | **PASS** |
-| TS-10 | Reject unresolvable customer ID | Throws `BadRequestError` if user context has no valid ID | **PASS** |
-| TS-11 | Prevent ticket reassignment by customer | Customers attempting to assign/reassign receive `403 Forbidden` | **PASS** |
-| TS-12 | Auto-timestamp on resolved | Automatically populates `resolvedAt` timestamp on transition | **PASS** |
-| TS-13 | Auto-timestamp on closed | Automatically populates `closedAt` timestamp on transition | **PASS** |
-| TS-14 | Timestamp clearing on reopen | Resets `resolvedAt` and `closedAt` to `null` on reopening | **PASS** |
-| TS-15 | Validate update assignee existence | Throws `BadRequestError` if updating with non-existent assignee | **PASS** |
-| TS-16 | Soft delete execution | Calls repository `softDelete` and returns confirmation | **PASS** |
-| TS-17 | Soft delete missing ticket | Throws `NotFoundError` if ticket ID does not exist | **PASS** |
-| TS-18 | Assignee existence validation | Rejects non-existent assignee ID on creation | **PASS** |
+#### Suite 3: Ticket Service Unit Tests (`src/services/__tests__/ticket.service.test.ts`) - 22 Tests
+- All 22 tests passing: ownership scoping, BOLA/IDOR prevention, auto-timestamps, state transitions, soft delete, and database failure propagation.
 
-#### Suite 4: Comment Service Unit Tests (`src/services/__tests__/comment.service.test.ts`)
-*(Repositories mocked via `jest.mock`)*
-| Test ID | Test Description | Security / Business Rule Verified | Result |
-| :--- | :--- | :--- | :---: |
-| CS-01 | Customer comment listing | Queries repository with `includeInternal: false` | **PASS** |
-| CS-02 | Agent comment listing | Queries repository with `includeInternal: true` | **PASS** |
-| CS-03 | Foreign ticket comment access | Throws `NotFoundError` if customer requests foreign ticket comments | **PASS** |
-| CS-04 | Public comment creation | Customer successfully creates public comment on own ticket | **PASS** |
-| CS-05 | Internal comment creation restriction | Customer sending `isInternal: true` receives `403 Forbidden` | **PASS** |
-| CS-06 | Agent internal comment creation | Agent successfully creates internal note with `isInternal: true` | **PASS** |
+#### Suite 4: Comment Service Unit Tests (`src/services/__tests__/comment.service.test.ts`) - 8 Tests
+- All 8 tests passing: comment listing, internal notes restriction, missing ticket 404 handling, and database failure propagation.
 
-#### Suite 5: Auth Service Unit Tests (`src/services/__tests__/auth.service.test.ts`)
-| Test ID | Test Description | Security / Business Rule Verified | Result |
-| :--- | :--- | :--- | :---: |
-| AS-01 | Customer registration | Hashes password with bcrypt and assigns role `customer` | **PASS** |
-| AS-02 | Duplicate registration prevention | Throws `ConflictError` (`409`) on existing email | **PASS** |
-| AS-03 | User login with valid credentials | Compares bcrypt hash and issues signed JWT access token | **PASS** |
-| AS-04 | User login missing email | Throws `UnauthorizedError` (`401`) with generic message | **PASS** |
-| AS-05 | User login wrong password | Throws `UnauthorizedError` (`401`) with identical generic message | **PASS** |
-| AS-06 | Inactive account handling | Throws `UnauthorizedError` if `isActive === false` | **PASS** |
-| AS-07 | Token verification | Successfully decodes valid signed JWT claims | **PASS** |
-| AS-08 | Tampered token rejection | Throws `UnauthorizedError` on malformed or expired JWT | **PASS** |
+#### Suite 5: Auth Service Unit Tests (`src/services/__tests__/auth.service.test.ts`) - 8 Tests
+- All 8 tests passing: customer registration, password hashing, conflict errors, generic auth errors, and JWT token verification.
 
-#### Suite 6: Supertest HTTP API Integration Tests (`src/__tests__/integration.test.ts`)
-| Test ID | HTTP Method & Path | Scenario Tested | HTTP Status | Result |
-| :--- | :--- | :--- | :---: | :---: |
-| IT-01 | `GET /health` | Healthcheck and uptime probe | `200 OK` | **PASS** |
-| IT-02 | `GET /docs/` | Interactive Swagger UI documentation served | `200 OK` | **PASS** |
-| IT-03 | `GET /docs.json` | Raw OpenAPI 3.0 specification served | `200 OK` | **PASS** |
-| IT-04 | `GET /tickets` | Missing Authorization token rejected | `401 Unauthorized` | **PASS** |
-| IT-05 | `GET /tickets/1/comments` | Missing Authorization token rejected | `401 Unauthorized` | **PASS** |
-| IT-06 | `POST /tickets/1/comments`| Missing Authorization token rejected | `401 Unauthorized` | **PASS** |
-| IT-07 | `GET /tickets?page=-5` | Negative page query parameter rejected | `400 Bad Request` | **PASS** |
-| IT-08 | `POST /auth/register` | Missing required fields rejected with standard envelope | `400 Bad Request` | **PASS** |
-| IT-09 | `POST /auth/login` | Malformed email string rejected with validation envelope | `400 Bad Request` | **PASS** |
-| IT-10 | `GET /api/non-existent` | Unknown endpoint handled by central 404 handler | `404 Not Found` | **PASS** |
+#### Suite 6: Supertest HTTP API Integration Tests (`src/__tests__/integration.test.ts`) - 30 Tests
+- All 30 integration tests passing on isolated database `supportdesk_test`:
+  - `GET /health` returns `200 OK`
+  - `GET /docs/` renders Swagger UI HTML
+  - `GET /docs.json` returns OpenAPI 3.0 spec
+  - Auth guards (missing token -> `401 Unauthorized`)
+  - Agent-only routes (customer DELETE -> `403 Forbidden`)
+  - Query parameter validation (negative page, limit > 100, invalid status, unapproved sort field -> `400 Bad Request` with `VALIDATION_ERROR` envelope)
+  - Pagination, scoping, filtering, and sorting (`status`, `priority`, `assigneeId`, `search`, `sortBy`, `sortOrder`)
+  - Comment sub-resource creation (author from JWT, customer internal note `403 Forbidden`, empty body `400 Bad Request`, missing ticket `404 Not Found`, internal comment filtering)
 
 ---
 
@@ -260,18 +207,18 @@ Threshold Requirement: **$\ge 70.00\%$ across all metrics**
 --------------------|---------|----------|---------|---------|-------------------
 File                | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 --------------------|---------|----------|---------|---------|-------------------
-All files           |   91.40 |    84.15 |  100.00 |   95.12 |                   
+All files           |   92.96 |    87.12 |  100.00 |   95.93 |                   
  auth.service.ts    |  100.00 |   100.00 |  100.00 |  100.00 | None              
- comment.service.ts |   94.73 |    93.75 |  100.00 |   94.73 | 43                
- ticket.service.ts  |   87.01 |    80.00 |  100.00 |   93.05 | 104-107,133       
+ comment.service.ts |  100.00 |   100.00 |  100.00 |  100.00 | None              
+ ticket.service.ts  |   88.31 |    82.66 |  100.00 |   93.05 | 104-107,133       
 --------------------|---------|----------|---------|---------|-------------------
 ```
 
 **Coverage Gate Evaluation**:
-- **Statements**: **91.40%** (Exceeds 70% threshold by +21.40%)
-- **Branches**: **84.15%** (Exceeds 70% threshold by +14.15%)
+- **Statements**: **92.96%** (Exceeds 70% threshold by +22.96%)
+- **Branches**: **87.12%** (Exceeds 70% threshold by +17.12%)
 - **Functions**: **100.00%** (Exceeds 70% threshold by +30.00%)
-- **Lines**: **95.12%** (Exceeds 70% threshold by +25.12%)
+- **Lines**: **95.93%** (Exceeds 70% threshold by +25.93%)
 
 ---
 
