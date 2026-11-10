@@ -312,21 +312,25 @@ DAY 10 TEST RESULTS: 19 / 19 PASSED (100%)
 
 ## 8. Definition of Done (DoD) Checklist
 
-- [x] Ticket pagination (`page`, `limit`) implemented and bounded ($\le 100$).
-- [x] Status, priority, and assignee filters implemented with enum validation.
-- [x] Multi-field search implemented (`title`, `description`, `reference`).
-- [x] Sorting allowlist enforced; arbitrary sort fields rejected with 400 Bad Request.
-- [x] Customer ownership scoping preserved on querying and total counts.
-- [x] Response envelope `{ data, error, meta: { page, limit, total, totalPages } }` maintained.
-- [x] Comments creation and listing endpoints implemented.
-- [x] Customer visibility excludes internal notes; agents/admins receive full list.
-- [x] Customers forbidden from creating internal notes (`403 Forbidden`).
-- [x] Interactive OpenAPI documentation mounted and verified at `/docs`.
-- [x] Test-first demonstration completed for 2 core functions.
-- [x] Repository mocked unit tests implemented for services.
-- [x] Supertest HTTP integration tests implemented.
-- [x] Service coverage exceeds 70% threshold (Achieved: **91.40%**).
-- [x] TypeScript compiler passes with 0 errors (`npx tsc --noEmit`).
-- [x] Day 10 regression suite passes 100% (19/19 tests).
-- [x] Prompt journal updated with Day 11 entries (Entries 17 & 18).
+| Requirement | Category | Status | Verification & Implementation Evidence |
+| :--- | :--- | :---: | :--- |
+| **Ticket Pagination** | API Querying | **DONE** | Validates `page` (default 1) and `limit` (default 10, maximum 100). Rejects non-integers or negative values. |
+| **Ticket Filters** | API Querying | **DONE** | Filters by `status` (enum), `priority` (P1-P4), and `assigneeId` (foreign key ID). Rejects invalid enum values. |
+| **Search Engine** | API Querying | **DONE** | Multi-field search across `title`, `description`, and `reference` using Prisma insensitive `contains`. |
+| **Sorting Controls** | API Querying | **DONE** | Allowlist enforced (`createdAt`, `updatedAt`, `priority`, `status`, `title`) with `asc` or `desc` directions. Prevents SQL injection. |
+| **Customer Data Scoping** | Security / Auth | **DONE** | Customer queries are strictly filtered by `customerId = req.user.id`. Prevents BOLA/IDOR. Query counts match customer scope. |
+| **Response Envelope** | API Standards | **DONE** | Standard envelope `{ data, error, meta: { page, limit, total, totalPages } }` maintained on all endpoints. |
+| **Comments Endpoints** | Collaboration | **DONE** | `GET /tickets/:id/comments` and `POST /tickets/:id/comments` implemented as ticket sub-resources. |
+| **Internal Comment Segregation** | Security / Privacy | **DONE** | `isInternal: true` strictly hidden from customer users; agents/admins receive all comments. |
+| **Internal Comment Permissions** | Security / Auth | **DONE** | Customers cannot create internal notes (`403 Forbidden`). Author ID is extracted from verified JWT payload. |
+| **OpenAPI 3.0 Documentation** | Documentation | **DONE** | Complete OpenAPI 3.0.3 spec in `apps/api/src/docs/openapi.json`. Interactive Swagger UI live at `http://localhost:3000/docs`. |
+| **Test-First Demonstration** | Software Quality | **DONE** | Demonstrated TDD workflow for `validateAndSanitizeTicketQuery` (7 tests) and `filterCommentsForRole` (4 tests). |
+| **Service Unit Tests (Mocked)** | Automated Testing | **DONE** | Comprehensive unit tests for `TicketService`, `CommentService`, and `AuthService` with repositories mocked via Jest. |
+| **Supertest Integration Tests** | Automated Testing | **DONE** | HTTP tests against live endpoints verifying `/health`, `/docs/`, `/docs.json`, auth guards, and error envelopes. |
+| **Total Test Count Gate** | Quality Gate | **DONE** | **52 tests passed out of 52 total** across 6 test suites (Target: $\ge 20$). |
+| **Code Coverage Gate** | Quality Gate | **DONE** | **91.40% Statements**, **84.15% Branches**, **100% Functions**, **95.12% Lines** (Target: $\ge 70\%$). |
+| **Backward Compatibility** | Regression | **DONE** | Day 10 test suite executed: **19 / 19 tests passed (100%)** with zero regressions. |
+| **TypeScript Compilation** | Quality Gate | **DONE** | `npx tsc --noEmit` runs with 0 errors and 0 warnings. |
+| **Prompt Journal** | Documentation | **DONE** | Updated with Day 11 entries (Entry 17: Test-First Planning, Entry 18: OpenAPI Docs). |
+| **Git Working Tree** | Version Control | **DONE** | All work committed to branch `feature/day-11-query-docs-tests` with a clean working tree. |
 
