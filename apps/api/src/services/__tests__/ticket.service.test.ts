@@ -1,6 +1,6 @@
 import { TicketService } from '../ticket.service';
 import { ticketRepository, Ticket } from '../../repositories/ticket.repository';
-import { NotFoundError, BadRequestError, ForbiddenError } from '../../errors/app.error';
+import { NotFoundError, BadRequestError, ForbiddenError, UnauthorizedError } from '../../errors/app.error';
 
 jest.mock('../../repositories/ticket.repository');
 
@@ -101,6 +101,11 @@ describe('TicketService Unit Tests (Repository Mocked)', () => {
         limit: 10,
       });
     });
+
+    it('should fail closed with UnauthorizedError if currentUser is omitted', async () => {
+      await expect(ticketService.getAllTickets({}, undefined)).rejects.toThrow(UnauthorizedError);
+      expect(mockedRepo.findManyWithPagination).not.toHaveBeenCalled();
+    });
   });
 
   describe('getTicketById', () => {
@@ -132,6 +137,43 @@ describe('TicketService Unit Tests (Repository Mocked)', () => {
 
       expect(mockedRepo.findById).toHaveBeenCalledWith(5, false, undefined);
       expect(ticket.id).toBe(5);
+    });
+
+    it('should strip internal comments when a customer fetches ticket details', async () => {
+      const mockTicketWithComments = {
+        ...createMockTicket({ id: 5, customerId: 10 }),
+        comments: [
+          { id: 1, body: 'Public note', isInternal: false, createdAt: new Date() },
+          { id: 2, body: 'Internal agent note', isInternal: true, createdAt: new Date() },
+        ],
+      };
+      mockedRepo.findById.mockResolvedValue(mockTicketWithComments as unknown as Ticket);
+
+      const customerUser = { id: 10, email: 'c@test.com', role: 'customer' };
+      const ticket = (await ticketService.getTicketById(5, customerUser)) as Ticket & {
+        comments: { isInternal: boolean }[];
+      };
+
+      expect(ticket.comments).toHaveLength(1);
+      expect(ticket.comments[0].isInternal).toBe(false);
+    });
+
+    it('should preserve internal comments when an agent fetches ticket details', async () => {
+      const mockTicketWithComments = {
+        ...createMockTicket({ id: 5, customerId: 10 }),
+        comments: [
+          { id: 1, body: 'Public note', isInternal: false, createdAt: new Date() },
+          { id: 2, body: 'Internal agent note', isInternal: true, createdAt: new Date() },
+        ],
+      };
+      mockedRepo.findById.mockResolvedValue(mockTicketWithComments as unknown as Ticket);
+
+      const agentUser = { id: 2, email: 'agent@test.com', role: 'agent' };
+      const ticket = (await ticketService.getTicketById(5, agentUser)) as Ticket & {
+        comments: { isInternal: boolean }[];
+      };
+
+      expect(ticket.comments).toHaveLength(2);
     });
   });
 
@@ -239,6 +281,33 @@ describe('TicketService Unit Tests (Repository Mocked)', () => {
         1,
         expect.objectContaining({
           status: 'in_progress',
+          resolvedAt: null,
+          closedAt: null,
+        })
+      );
+    });
+
+    it('should reset resolvedAt and closedAt when status transitions to waiting_on_customer', async () => {
+      const existingTicket = createMockTicket({
+        status: 'closed',
+        resolvedAt: new Date(),
+        closedAt: new Date(),
+      });
+      mockedRepo.findById.mockResolvedValue(existingTicket);
+      mockedRepo.update.mockResolvedValue({
+        ...existingTicket,
+        status: 'waiting_on_customer',
+        resolvedAt: null,
+        closedAt: null,
+      });
+
+      const agentUser = { id: 2, email: 'agent@test.com', role: 'agent' };
+      await ticketService.updateTicket(1, { status: 'waiting_on_customer' }, agentUser);
+
+      expect(mockedRepo.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          status: 'waiting_on_customer',
           resolvedAt: null,
           closedAt: null,
         })

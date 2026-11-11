@@ -113,6 +113,20 @@ describe('Supertest HTTP API Integration Tests (Isolated Test Database)', () => 
       expect(res.body.error.code).toBe('VALIDATION_ERROR');
     });
 
+    it('should return 400 Bad Request if customerId or assigneeId filter is 0', async () => {
+      const resCustomerZero = await request(app)
+        .get('/tickets?customerId=0')
+        .set('Authorization', `Bearer ${fixtures.users.agent.token}`);
+      expect(resCustomerZero.status).toBe(400);
+      expect(resCustomerZero.body.error.code).toBe('VALIDATION_ERROR');
+
+      const resAssigneeZero = await request(app)
+        .get('/tickets?assigneeId=0')
+        .set('Authorization', `Bearer ${fixtures.users.agent.token}`);
+      expect(resAssigneeZero.status).toBe(400);
+      expect(resAssigneeZero.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
     it('should reject invalid auth registration payload with 400 Bad Request', async () => {
       const res = await request(app)
         .post('/auth/register')
@@ -241,6 +255,38 @@ describe('Supertest HTTP API Integration Tests (Isolated Test Database)', () => 
 
       expect(res.status).toBe(404);
       expect(res.body.error.code).toBe('NOT_FOUND');
+    });
+
+    it('should return totalPages=0 when search matches zero tickets', async () => {
+      const res = await request(app)
+        .get('/tickets?search=definitely_no_matching_ticket_xyz_999')
+        .set('Authorization', `Bearer ${fixtures.users.agent.token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([]);
+      expect(res.body.meta).toEqual({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      });
+    });
+
+    it('should exclude internal comments from GET /tickets/:id for customers but include them for agents', async () => {
+      const ticketId = fixtures.tickets.customer1P1Open.id;
+
+      const customerRes = await request(app)
+        .get(`/tickets/${ticketId}`)
+        .set('Authorization', `Bearer ${fixtures.users.customer1.token}`);
+      expect(customerRes.status).toBe(200);
+      expect(Array.isArray(customerRes.body.data.comments)).toBe(true);
+      expect(customerRes.body.data.comments.every((c: any) => c.isInternal === false)).toBe(true);
+
+      const agentRes = await request(app)
+        .get(`/tickets/${ticketId}`)
+        .set('Authorization', `Bearer ${fixtures.users.agent.token}`);
+      expect(agentRes.status).toBe(200);
+      expect(agentRes.body.data.comments.some((c: any) => c.isInternal === true)).toBe(true);
     });
   });
 

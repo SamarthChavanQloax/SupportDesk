@@ -58,11 +58,11 @@ export class TicketRepository {
       where.priority = filters.priority;
     }
 
-    if (filters.customerId) {
+    if (filters.customerId !== undefined) {
       where.customerId = filters.customerId;
     }
 
-    if (filters.assigneeId) {
+    if (filters.assigneeId !== undefined) {
       where.assigneeId = filters.assigneeId;
     }
 
@@ -161,7 +161,7 @@ export class TicketRepository {
       prisma.ticket.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / limit) || 1;
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
 
     return {
       tickets,
@@ -318,11 +318,11 @@ export class TicketRepository {
   }
 
   /**
-   * Count total non-deleted tickets
+   * Count total tickets (optionally including soft-deleted records for reference generation)
    */
-  async count(): Promise<number> {
+  async count(includeDeleted = false): Promise<number> {
     return prisma.ticket.count({
-      where: { deletedAt: null },
+      where: includeDeleted ? undefined : { deletedAt: null },
     });
   }
 }

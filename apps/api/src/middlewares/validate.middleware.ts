@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
+import { ZodSchema } from 'zod';
 
 export function validateBody(schema: ZodSchema) {
   return (req: Request, _res: Response, next: NextFunction): void => {
@@ -7,11 +7,7 @@ export function validateBody(schema: ZodSchema) {
       req.body = schema.parse(req.body);
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        next(error);
-      } else {
-        next(error);
-      }
+      next(error);
     }
   };
 }
@@ -28,9 +24,10 @@ export function validateParams(schema: ZodSchema) {
 }
 
 export function validateQuery(schema: ZodSchema) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
-      schema.parse(req.query);
+      // Store Zod-parsed/trimmed query values on res.locals (Express 5 req.query is read-only)
+      res.locals.validatedQuery = schema.parse(req.query);
       next();
     } catch (error) {
       next(error);

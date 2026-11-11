@@ -1,5 +1,6 @@
-import { ticketRepository, TicketFilterOptions, CreateTicketData, UpdateTicketData } from '../repositories/ticket.repository';
-import { NotFoundError, BadRequestError, ForbiddenError } from '../errors/app.error';
+import { ticketRepository, TicketFilterOptions, CreateTicketData, UpdateTicketData, Ticket } from '../repositories/ticket.repository';
+import { NotFoundError, BadRequestError, ForbiddenError, UnauthorizedError } from '../errors/app.error';
+import { filterCommentsForRole, Role } from '../utils/comment-visibility.util';
 
 export interface UserContext {
   id: number;
@@ -35,9 +36,13 @@ export class TicketService {
    * - Agents and Admins can see all tickets.
    */
   async getAllTickets(filters: TicketFilterOptions = {}, currentUser?: UserContext) {
+    if (!currentUser) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
     const scopedFilters = { ...filters };
 
-    if (currentUser?.role === 'customer') {
+    if (currentUser.role === 'customer') {
       scopedFilters.customerId = currentUser.id;
     }
 
@@ -50,13 +55,30 @@ export class TicketService {
    * - Customers can access ONLY their own ticket.
    * - If a customer requests another customer's ticket, return NotFoundError
    *   (avoids leaking the existence of other tickets, preventing ID enumeration).
+   * - Internal comments included on the ticket are stripped for customers.
    */
   async getTicketById(id: number, currentUser?: UserContext) {
-    const customerScope = currentUser?.role === 'customer' ? currentUser.id : undefined;
+    if (!currentUser) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
+    const customerScope = currentUser.role === 'customer' ? currentUser.id : undefined;
     const ticket = await ticketRepository.findById(id, false, customerScope);
     if (!ticket) {
       throw new NotFoundError(`Ticket with ID ${id}`);
     }
+
+    type TicketWithComments = Ticket & { comments?: { isInternal: boolean }[] };
+    const ticketWithComments = ticket as TicketWithComments;
+    if (Array.isArray(ticketWithComments.comments)) {
+      const role: Role =
+        currentUser.role === 'agent' || currentUser.role === 'admin' ? currentUser.role : 'customer';
+      return {
+        ...ticketWithComments,
+        comments: filterCommentsForRole(ticketWithComments.comments, role),
+      };
+    }
+
     return ticket;
   }
 
@@ -92,7 +114,7 @@ export class TicketService {
     // 3. Generate unique human-readable reference if not explicitly supplied
     let reference = dto.reference;
     if (!reference) {
-      const totalCount = await ticketRepository.count();
+      const totalCount = await ticketRepository.count(true);
       const currentYear = new Date().getFullYear();
       const sequence = String(totalCount + 1).padStart(4, '0');
       reference = `TCK-${currentYear}-${sequence}`;
@@ -163,7 +185,11 @@ export class TicketService {
         if (!existingTicket.resolvedAt) {
           updateData.resolvedAt = new Date();
         }
-      } else if (dto.status === 'open' || dto.status === 'in_progress') {
+      } else if (
+        dto.status === 'open' ||
+        dto.status === 'in_progress' ||
+        dto.status === 'waiting_on_customer'
+      ) {
         updateData.resolvedAt = null;
         updateData.closedAt = null;
       }

@@ -55,6 +55,22 @@
           "password": { "type": "string", "format": "password", "example": "Password123!" }
         }
       },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "example": 1 },
+              "name": { "type": "string", "example": "Jane Doe" },
+              "email": { "type": "string", "example": "jane.doe@example.com" },
+              "role": { "type": "string", "enum": ["customer", "agent", "admin"], "example": "customer" }
+            }
+          },
+          "error": { "type": "null" },
+          "meta": { "type": "object", "example": {} }
+        }
+      },
       "AuthResponse": {
         "type": "object",
         "properties": {
@@ -70,7 +86,7 @@
                   "role": { "type": "string", "enum": ["customer", "agent", "admin"], "example": "customer" }
                 }
               },
-              "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+              "accessToken": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
             }
           },
           "error": { "type": "null" },
@@ -81,19 +97,25 @@
         "type": "object",
         "required": ["title", "description"],
         "properties": {
-          "title": { "type": "string", "minLength": 1, "maxLength": 200, "example": "Unable to access payment portal" },
-          "description": { "type": "string", "minLength": 1, "maxLength": 5000, "example": "Getting a 500 error when clicking checkout." },
-          "priority": { "type": "string", "enum": ["P1", "P2", "P3", "P4"], "default": "P3", "example": "P2" }
+          "title": { "type": "string", "minLength": 3, "maxLength": 255, "example": "Unable to access payment portal" },
+          "description": { "type": "string", "minLength": 5, "example": "Getting a 500 error when clicking checkout." },
+          "customerId": { "type": "integer", "minimum": 1, "description": "Target customer ID (ignored for customer role)", "example": 1 },
+          "priority": { "type": "string", "enum": ["P1", "P2", "P3", "P4"], "default": "P3", "example": "P2" },
+          "status": { "type": "string", "enum": ["open", "in_progress", "waiting_on_customer", "resolved", "closed"], "default": "open", "example": "open" },
+          "category": { "type": "string", "maxLength": 100, "example": "Billing" },
+          "assigneeId": { "type": "integer", "minimum": 1, "nullable": true, "example": 2 }
         }
       },
       "UpdateTicketRequest": {
         "type": "object",
+        "minProperties": 1,
         "properties": {
-          "title": { "type": "string", "maxLength": 200, "example": "Updated payment portal issue" },
-          "description": { "type": "string", "maxLength": 5000, "example": "Issue now persists across browsers." },
+          "title": { "type": "string", "minLength": 3, "maxLength": 255, "example": "Updated payment portal issue" },
+          "description": { "type": "string", "minLength": 5, "example": "Issue now persists across browsers." },
           "status": { "type": "string", "enum": ["open", "in_progress", "waiting_on_customer", "resolved", "closed"], "example": "in_progress" },
           "priority": { "type": "string", "enum": ["P1", "P2", "P3", "P4"], "example": "P1" },
-          "assigneeId": { "type": "integer", "nullable": true, "example": 2 }
+          "category": { "type": "string", "maxLength": 100, "example": "Billing" },
+          "assigneeId": { "type": "integer", "minimum": 1, "nullable": true, "example": 2 }
         }
       },
       "CreateCommentRequest": {
@@ -118,6 +140,7 @@
             "properties": {
               "id": { "type": "integer", "example": 2 },
               "name": { "type": "string", "example": "Agent Smith" },
+              "email": { "type": "string", "example": "agent@supportdesk.dev" },
               "role": { "type": "string", "example": "agent" }
             }
           }
@@ -127,11 +150,12 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer", "example": 42 },
-          "reference": { "type": "string", "example": "TCK-42" },
+          "reference": { "type": "string", "example": "TCK-2026-0001" },
           "title": { "type": "string", "example": "Unable to access payment portal" },
           "description": { "type": "string", "example": "Getting a 500 error when clicking checkout." },
           "status": { "type": "string", "example": "open" },
           "priority": { "type": "string", "example": "P2" },
+          "category": { "type": "string", "nullable": true, "example": "Billing" },
           "customerId": { "type": "integer", "example": 1 },
           "assigneeId": { "type": "integer", "nullable": true, "example": null },
           "createdAt": { "type": "string", "format": "date-time" },
@@ -152,6 +176,11 @@
               "name": { "type": "string" },
               "email": { "type": "string" }
             }
+          },
+          "comments": {
+            "type": "array",
+            "description": "Included on GET /tickets/{id}; internal comments filtered out for customers",
+            "items": { "$ref": "#/components/schemas/Comment" }
           }
         }
       }
@@ -200,7 +229,7 @@
         "responses": {
           "201": {
             "description": "User registered successfully",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterResponse" } } }
           },
           "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } } },
           "409": { "description": "Email already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } } }
@@ -265,6 +294,7 @@
               }
             }
           },
+          "400": { "description": "Invalid query parameter", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } } },
           "401": { "description": "Unauthenticated" },
           "403": { "description": "Forbidden" }
         }
@@ -320,6 +350,7 @@
               }
             }
           },
+          "400": { "description": "Invalid ticket ID path parameter", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } } },
           "401": { "description": "Unauthenticated" },
           "403": { "description": "Forbidden" },
           "404": { "description": "Ticket not found" }
@@ -339,6 +370,7 @@
           "200": { "description": "Ticket updated successfully" },
           "400": { "description": "Validation error" },
           "401": { "description": "Unauthenticated" },
+          "403": { "description": "Forbidden: Customers cannot assign or reassign tickets" },
           "404": { "description": "Ticket not found" }
         }
       },
