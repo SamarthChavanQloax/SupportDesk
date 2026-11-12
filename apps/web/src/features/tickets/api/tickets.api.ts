@@ -63,3 +63,4 @@ export async function fetchTickets(params: TicketQueryParams = {}): Promise<Tick
     meta: response.meta,
   };
 }
+

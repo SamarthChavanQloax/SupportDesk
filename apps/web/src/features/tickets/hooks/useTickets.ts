@@ -7,3 +7,4 @@ export function useTickets(params: TicketQueryParams = { page: 1, limit: 10 }) {
     queryFn: () => fetchTickets(params),
   });
 }
+

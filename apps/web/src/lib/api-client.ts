@@ -152,3 +152,4 @@ export const apiClient = {
   delete: <T>(path: string, options?: { skipAuth?: boolean }) =>
     request<T>('DELETE', path, undefined, options),
 };
+

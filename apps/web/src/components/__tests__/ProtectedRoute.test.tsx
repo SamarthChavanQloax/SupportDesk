@@ -48,3 +48,4 @@ describe('ProtectedRoute & PublicOnlyRoute', () => {
     expect(screen.queryByText('Login Screen')).not.toBeInTheDocument();
   });
 });
+
