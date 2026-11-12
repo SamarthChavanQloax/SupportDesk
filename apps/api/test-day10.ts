@@ -366,8 +366,8 @@ async function runTests() {
       'Agent can view all tickets across all customers',
       agentTicketsRes.status === 200 &&
         agentTicketsRes.body?.meta?.total >= 50 &&
-        agentTicketsRes.body?.data?.length > (customerTicketsRes.body?.data?.length || 0),
-      `Total tickets visible to agent: ${agentTicketsRes.body?.meta?.total}`
+        agentTicketsRes.body?.meta?.total > (customerTicketsRes.body?.meta?.total || 0),
+      `Total tickets visible to agent: ${agentTicketsRes.body?.meta?.total}, customer total: ${customerTicketsRes.body?.meta?.total}`
     );
 
     // AUTH-16: Password hash exposure check across all endpoints

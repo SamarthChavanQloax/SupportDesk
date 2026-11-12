@@ -1,0 +1,363 @@
+{
+  "info": {
+    "_postman_id": "day12-api-demo-collection-2026",
+    "name": "SupportDesk — Day 12 End-to-End API Demo",
+    "description": "End-to-end Week 2 Postman demonstration covering Health, OpenAPI /docs, Auth JWT, Customer/Agent Ticket Scoping, Query/Filter/Pagination, Internal vs Public Comments, and RBAC.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Health Check (GET /health)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Envelope has data.status=ok and error=null', () => {",
+              "  const json = pm.response.json();",
+              "  pm.expect(json.data.status).to.eql('ok');",
+              "  pm.expect(json.error).to.eql(null);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "02. OpenAPI Swagger UI (GET /docs/)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Serves Swagger UI HTML', () => pm.expect(pm.response.text()).to.include('swagger-ui'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/docs/", "host": ["{{baseUrl}}"], "path": ["docs", ""] }
+      }
+    },
+    {
+      "name": "03. Login Customer (POST /auth/login)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.accessToken).to.be.a('string');",
+              "pm.expect(json.data.user.role).to.eql('customer');",
+              "pm.environment.set('customerToken', json.data.accessToken);",
+              "pm.environment.set('customerId', String(json.data.user.id));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"customer1@test.com\",\"password\":\"Password123!\"}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+      }
+    },
+    {
+      "name": "04. Login Agent (POST /auth/login)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.accessToken).to.be.a('string');",
+              "pm.expect(json.data.user.role).to.eql('agent');",
+              "pm.environment.set('agentToken', json.data.accessToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"agent@test.com\",\"password\":\"Password123!\"}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+      }
+    },
+    {
+      "name": "05. Customer Creates Ticket (POST /tickets)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.expect(String(json.data.customerId)).to.eql(pm.environment.get('customerId'));",
+              "pm.environment.set('demoTicketId', String(json.data.id));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"title\":\"Postman Demo Billing Issue\",\"description\":\"Invoice PDF fails to download on Safari.\",\"priority\":\"P2\",\"category\":\"Billing\",\"customerId\":9999}"
+        },
+        "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] }
+      }
+    },
+    {
+      "name": "06. Customer Lists Scoped Tickets (GET /tickets?page=1&limit=2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "const cid = Number(pm.environment.get('customerId'));",
+              "pm.test('All tickets belong to logged-in customer', () => {",
+              "  json.data.forEach(t => pm.expect(t.customerId).to.eql(cid));",
+              "});",
+              "pm.expect(json.meta).to.have.all.keys('page', 'limit', 'total', 'totalPages');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/tickets?page=1&limit=2&sortBy=createdAt&sortOrder=desc",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "2" },
+            { "key": "sortBy", "value": "createdAt" },
+            { "key": "sortOrder", "value": "desc" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "07. Agent Filters & Searches Tickets (GET /tickets?search=Payment&priority=P1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.length).to.be.above(0);",
+              "json.data.forEach(t => pm.expect(t.priority).to.eql('P1'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{agentToken}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/tickets?search=Payment&priority=P1",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"],
+          "query": [
+            { "key": "search", "value": "Payment" },
+            { "key": "priority", "value": "P1" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "08. Customer Posts Public Comment (POST /tickets/:id/comments)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.isInternal).to.eql(false);",
+              "pm.expect(String(json.data.authorId)).to.eql(pm.environment.get('customerId'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"body\":\"Happens on Safari 18 too.\"}" },
+        "url": { "raw": "{{baseUrl}}/tickets/{{demoTicketId}}/comments", "host": ["{{baseUrl}}"], "path": ["tickets", "{{demoTicketId}}", "comments"] }
+      }
+    },
+    {
+      "name": "09. Customer Blocked From Internal Note (403 Forbidden)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 403 Forbidden', () => pm.response.to.have.status(403));",
+              "pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"body\":\"Trying internal note\",\"isInternal\":true}" },
+        "url": { "raw": "{{baseUrl}}/tickets/{{demoTicketId}}/comments", "host": ["{{baseUrl}}"], "path": ["tickets", "{{demoTicketId}}", "comments"] }
+      }
+    },
+    {
+      "name": "10. Agent Posts Internal Note (201 Created)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+              "pm.expect(pm.response.json().data.isInternal).to.eql(true);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{agentToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"body\":\"Internal triage: check PDF worker logs.\",\"isInternal\":true}" },
+        "url": { "raw": "{{baseUrl}}/tickets/{{demoTicketId}}/comments", "host": ["{{baseUrl}}"], "path": ["tickets", "{{demoTicketId}}", "comments"] }
+      }
+    },
+    {
+      "name": "11. Customer Gets Ticket Detail (Internal Comments Stripped)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "const comments = pm.response.json().data.comments;",
+              "pm.expect(comments.every(c => c.isInternal === false)).to.eql(true);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+        "url": { "raw": "{{baseUrl}}/tickets/{{demoTicketId}}", "host": ["{{baseUrl}}"], "path": ["tickets", "{{demoTicketId}}"] }
+      }
+    },
+    {
+      "name": "12. Agent Gets Ticket Detail (Internal Comments Included)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+              "const comments = pm.response.json().data.comments;",
+              "pm.expect(comments.some(c => c.isInternal === true)).to.eql(true);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{agentToken}}" }],
+        "url": { "raw": "{{baseUrl}}/tickets/{{demoTicketId}}", "host": ["{{baseUrl}}"], "path": ["tickets", "{{demoTicketId}}"] }
+      }
+    },
+    {
+      "name": "13. Invalid Sort Field Rejected (400 Bad Request)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400 Bad Request', () => pm.response.to.have.status(400));",
+              "pm.expect(pm.response.json().error.code).to.eql('VALIDATION_ERROR');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{agentToken}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/tickets?sortBy=password_hash",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets"],
+          "query": [{ "key": "sortBy", "value": "password_hash" }]
+        }
+      }
+    },
+    {
+      "name": "14. Customer Delete Ticket Blocked by RBAC (403 Forbidden)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 403 Forbidden', () => pm.response.to.have.status(403));",
+              "pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+        "url": { "raw": "{{baseUrl}}/tickets/{{demoTicketId}}", "host": ["{{baseUrl}}"], "path": ["tickets", "{{demoTicketId}}"] }
+      }
+    }
+  ]
+}
+
