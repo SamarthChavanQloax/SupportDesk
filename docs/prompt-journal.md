@@ -60,3 +60,22 @@
 - **How I checked the result:** Verified with Supertest integration tests in `src/__tests__/integration.test.ts` that `GET /docs/` returns HTTP 200 with Swagger UI assets, and `GET /docs.json` returns HTTP 200 with valid OpenAPI 3.0 JSON.
 - **What I learned:** Maintaining documentation as code alongside automated tests guarantees that documentation never drifts from production behavior.
 
+
+---
+
+## Entry 19 — Day 13: Frontend Foundations, Auth State, and Typed API Client (`apps/web`)
+- **Date:** 12 November 2026
+- **Goal:** Scaffold `apps/web` with React, Vite, TypeScript, Tailwind CSS v4, React Router, TanStack Query, and React Hook Form; build a shared typed API client and working login + protected `/tickets` foundation aligned with the `apps/api` contract and Navy + Teal design tokens.
+- **Prompt used:**
+  > "Build the SupportDesk `apps/web` frontend foundation on branch `feat/web-login-foundation`. Use `src/lib/api-client.ts` reading `import.meta.env.VITE_API_BASE_URL` for all HTTP calls (no hardcoded URLs, no `fetch()` inside UI components), `src/lib/auth.tsx` for Bearer JWT persistence and 401 session clearing, `ProtectedRoute`/`PublicOnlyRoute` guards, a responsive `AppLayout` (Navy `#172B4D` desktop sidebar + mobile slide-over drawer), `LoginPage` with React Hook Form validation and accessible error alerts, and `TicketsOverview` backed by `useTickets()`. Verify with `tsc -b && vite build` and Vitest."
+- **Summary of AI response:** Created the full `apps/web` workspace (`package.json`, `vite.config.ts`, `tsconfig.json`, `.env.example`, `src/index.css`), typed `apiClient` + `ApiError`, `AuthProvider`/`useAuth`, `tickets.api.ts` + `useTickets.ts`, `TicketsOverview.tsx`, `ProtectedRoute.tsx`, `AppLayout.tsx`, `LoginPage.tsx`, `TicketsPage.tsx`, `App.tsx`, `main.tsx`, and 3 Vitest suites.
+- **What I changed or rejected:**
+  - Rejected placing `fetch()` calls or hardcoded `http://localhost:3000` URLs inside `LoginPage` or `TicketsOverview`; centralized all HTTP and Bearer header injection in `src/lib/api-client.ts`.
+  - Rejected inventing a `/auth/me` or `/auth/logout` endpoint since `apps/api/src/routes/auth.routes.ts` only implements `POST /register` and `POST /login`; client-side sign-out and `401` auto-clear handle session termination cleanly.
+  - Replaced an initial `@testing-library/user-event` test import with built-in `fireEvent` from `@testing-library/react` to avoid unnecessary test dependencies.
+- **Why I changed it:** Keeping API transport, auth state, and UI components decoupled prevents endpoint drift, keeps `.env` configuration clean, and allows deterministic Vitest testing.
+- **How I checked the result:**
+  - `npm --prefix apps/web run build` (`tsc -b && vite build`): exited 0, 96 modules transformed.
+  - `npm --prefix apps/web test` (`vitest run`): 3 test files passed, 8 tests passed.
+  - Audited `apps/web/src` (excluding `__tests__`) to verify `fetch(` appears only in `src/lib/api-client.ts` and zero hardcoded `http://localhost` URLs exist in `src/`.
+- **What I learned:** Inspecting the real backend Zod schemas (`loginSchema` trimming/lowercasing email) and response envelope (`{ data, error, meta }`) before writing frontend types eliminates contract mismatches early.
