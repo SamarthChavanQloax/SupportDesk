@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --sd-navy: #172B4D;
+  --sd-blue: #2563EB;
+  --sd-teal: #0D9488;
+  --sd-bg: #F8FAFC;
+  --sd-surface: #FFFFFF;
+  --sd-text: #334155;
+  --sd-muted: #64748B;
+  --sd-border: #E2E8F0;
+
+  --sd-status-open: #2563EB;
+  --sd-status-progress: #7C3AED;
+  --sd-status-pending: #D97706;
+  --sd-status-resolved: #16A34A;
+  --sd-status-closed: #64748B;
+  --sd-priority-high: #DC2626;
+}
+
+@theme {
+  --color-sd-navy: #172B4D;
+  --color-sd-blue: #2563EB;
+  --color-sd-teal: #0D9488;
+  --color-sd-bg: #F8FAFC;
+  --color-sd-surface: #FFFFFF;
+  --color-sd-text: #334155;
+  --color-sd-muted: #64748B;
+  --color-sd-border: #E2E8F0;
+  --color-sd-open: #2563EB;
+  --color-sd-progress: #7C3AED;
+  --color-sd-pending: #D97706;
+  --color-sd-resolved: #16A34A;
+  --color-sd-closed: #64748B;
+  --color-sd-high: #DC2626;
+}
+
+body {
+  background-color: var(--sd-bg);
+  color: var(--sd-text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+

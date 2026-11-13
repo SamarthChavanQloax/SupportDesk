@@ -60,3 +60,73 @@
 - **How I checked the result:** Verified with Supertest integration tests in `src/__tests__/integration.test.ts` that `GET /docs/` returns HTTP 200 with Swagger UI assets, and `GET /docs.json` returns HTTP 200 with valid OpenAPI 3.0 JSON.
 - **What I learned:** Maintaining documentation as code alongside automated tests guarantees that documentation never drifts from production behavior.
 
+
+---
+
+## Entry 19 — Day 13: Frontend Foundations, Auth State, and Typed API Client (`apps/web`)
+- **Date:** 12 November 2026
+- **Goal:** Scaffold `apps/web` with React, Vite, TypeScript, Tailwind CSS v4, React Router, TanStack Query, and React Hook Form; build a shared typed API client and working login + protected `/tickets` foundation aligned with the `apps/api` contract and Navy + Teal design tokens.
+- **Prompt used:**
+  > "Build the SupportDesk `apps/web` frontend foundation on branch `feat/web-login-foundation`. Use `src/lib/api-client.ts` reading `import.meta.env.VITE_API_BASE_URL` for all HTTP calls (no hardcoded URLs, no `fetch()` inside UI components), `src/lib/auth.tsx` for Bearer JWT persistence and 401 session clearing, `ProtectedRoute`/`PublicOnlyRoute` guards, a responsive `AppLayout` (Navy `#172B4D` desktop sidebar + mobile slide-over drawer), `LoginPage` with React Hook Form validation and accessible error alerts, and `TicketsOverview` backed by `useTickets()`. Verify with `tsc -b && vite build` and Vitest."
+- **Summary of AI response:** Created the full `apps/web` workspace (`package.json`, `vite.config.ts`, `tsconfig.json`, `.env.example`, `src/index.css`), typed `apiClient` + `ApiError`, `AuthProvider`/`useAuth`, `tickets.api.ts` + `useTickets.ts`, `TicketsOverview.tsx`, `ProtectedRoute.tsx`, `AppLayout.tsx`, `LoginPage.tsx`, `TicketsPage.tsx`, `App.tsx`, `main.tsx`, and 3 Vitest suites.
+- **What I changed or rejected:**
+  - Rejected placing `fetch()` calls or hardcoded `http://localhost:3000` URLs inside `LoginPage` or `TicketsOverview`; centralized all HTTP and Bearer header injection in `src/lib/api-client.ts`.
+  - Rejected inventing a `/auth/me` or `/auth/logout` endpoint since `apps/api/src/routes/auth.routes.ts` only implements `POST /register` and `POST /login`; client-side sign-out and `401` auto-clear handle session termination cleanly.
+  - Replaced an initial `@testing-library/user-event` test import with built-in `fireEvent` from `@testing-library/react` to avoid unnecessary test dependencies.
+- **Why I changed it:** Keeping API transport, auth state, and UI components decoupled prevents endpoint drift, keeps `.env` configuration clean, and allows deterministic Vitest testing.
+- **How I checked the result:**
+  - `npm --prefix apps/web run build` (`tsc -b && vite build`): exited 0, 96 modules transformed.
+  - `npm --prefix apps/web test` (`vitest run`): 3 test files passed, 8 tests passed.
+  - Audited `apps/web/src` (excluding `__tests__`) to verify `fetch(` appears only in `src/lib/api-client.ts` and zero hardcoded `http://localhost` URLs exist in `src/`.
+- **What I learned:** Inspecting the real backend Zod schemas (`loginSchema` trimming/lowercasing email) and response envelope (`{ data, error, meta }`) before writing frontend types eliminates contract mismatches early.
+
+---
+
+## Entry 20 — Day 14: Ticket Screens End to End (List, Detail with Comments, Create Form)
+- **Date:** 13 November 2026
+- **Goal:** Extend the Day 13 frontend foundation into a full ticket-management experience on branch `feat/web-ticket-screens`. Implement server-backed pagination and filters, status badges, ticket details with chronological comment thread and internal note confidentiality, ticket creation form reusing the API's exact Zod schema, and TanStack Query mutations with cache invalidation.
+- **Prompt used:**
+  > "Act as a senior React/TypeScript engineer working on SupportDesk. Inspect the actual ticket API contract, existing frontend structure and Day 13 API client. Plan a ticket list screen with server-backed pagination, only the filters supported by the API, and consistent status badges. Use TanStack Query and the project's existing patterns. Specify query keys, query parameters, response types, loading/empty/error states and tests. Do not invent endpoints, fields, statuses, pagination formats or dependencies. Do not put fetch/API calls in components. First return a file-by-file plan; do not edit code."
+- **Summary of AI response:** Planned and implemented:
+  1. `features/tickets/schema/ticket-schema.ts`: Direct import and re-export of `createTicketSchema` from `../../../../../api/src/validations/ticket.validation.ts` via `@hookform/resolvers/zod`.
+  2. `features/tickets/api/tickets.api.ts`: Typed functions for `fetchTickets`, `fetchTicketById`, `createTicket`, `updateTicket`, `fetchComments`, and `createComment`.
+  3. `features/tickets/hooks/useTickets.ts`: Hierarchical query keys (`ticketKeys`) and TanStack Query hooks/mutations with automated cache invalidation.
+  4. `features/tickets/components/StatusBadge.tsx`: Reusable status and priority badges mapping all 5 backend statuses (`open`, `in_progress`, `waiting_on_customer`, `resolved`, `closed`).
+  5. `features/tickets/components/TicketsList.tsx`: Server-backed filters (status, priority, search), pagination controls (prev, next, page numbers), loading, empty, and error states.
+  6. `pages/TicketDetailPage.tsx`: Ticket header, agent status transition dropdown, chronological comment thread, internal note styling, and add-comment form with role-based internal note toggle.
+  7. `pages/CreateTicketPage.tsx`: React Hook Form wired to shared `createTicketSchema` with field validation errors, submitting state, and navigation to created ticket.
+- **What I changed or rejected:**
+  - Rejected creating a frontend copy of `createTicketSchema`; imported the exact Zod schema directly from `apps/api/src/validations/ticket.validation.ts`.
+  - Rejected filtering ticket list in-memory in the browser; bound pagination and filters (`page`, `limit`, `status`, `priority`, `search`) to server query params.
+  - Rejected exposing the internal note checkbox or status transition dropdown to customers; restricted them strictly to agents and admins in UI and relied on backend 403 enforcement.
+- **Why I changed it:** Prevents schema drift between frontend and backend, enforces business confidentiality, and ensures cache and server state stay synchronized.
+- **How I checked the result:**
+  - `npm --prefix apps/web run build` (`tsc -b && vite build`): Exited `0`, 198 modules transformed.
+  - `npm --prefix apps/web test` (`vitest run`): **7 test files passed (7), 27 tests passed (27)**.
+  - Audited `apps/web/src`: Verified `fetch(` is strictly isolated to `src/lib/api-client.ts`.
+- **What I learned:** Integrating hierarchical TanStack Query keys (`['tickets', 'detail', id, 'comments']`) ensures that mutations instantly invalidate all affected lists and detail views without full page reloads or stale cache flicker.
+
+---
+
+## Entry 21 — Day 14: Strict Verification, Contract Audit, and Live Test Run
+- **Date:** 13 November 2026
+- **Goal:** Conduct a rigorous audit of the Day 14 implementation: resolve schema validation boundaries, verify mid-session 401 handling, add missing edge-case unit tests (filter reset, totalPages=0, double-submit guard, cache invalidation, mutation failure banners), and execute the live 9-step customer-to-agent workflow against the `supportdesk_test` PostgreSQL database.
+- **Prompt used:**
+  > "Act as a senior React/TypeScript engineer, QA automation engineer and strict code reviewer. Verify everything yourself, finish whatever is missing, test it for real, and fix every bug you find. Paste real command output for every claim. Execute the live flow against Docker supportdesk_test (DATABASE_URL must contain _test). Show createTicketSchema in full, resolve 3-255 vs 1-200, audit 401 handling, list all tests across all test files with new pass counts, document backend status rule under LEAD DECISIONS NEEDED, show git diff stats, and do not push."
+- **Summary of AI response:**
+  1. Ran PostgreSQL container `supportdesk-postgres` on port 5433 and seeded `supportdesk_test` with 6 users and 66 tickets.
+  2. Executed live 9-step acceptance flow + 4 edge cases against backend on port 3001, confirming ticket creation, queue visibility, public comment, internal note confidentiality, status update to `in_progress`, and zero secret leaks.
+  3. Expanded test suite to 8 test files and 38 tests, covering query key factories, mutation cache invalidations, page resets on filter change, `totalPages = 0`, double-submit guards, and error banners.
+  4. Resolved schema contract: confirmed `createTicketSchema` in `ticket.validation.ts` and OpenAPI spec enforce `title` 3–255 and `description` $\ge 5$.
+  5. Documented 401 mid-session handling (`apiClient` -> `logout()` -> `queryClient.clear()` -> redirect to `/login`) and token storage risk.
+  6. Documented backend customer status update gap under Lead Decisions Needed.
+- **What I changed or rejected:**
+  - Added dedicated tests for `totalPages = 0`, search filter page reset, double-submit prevention during pending mutations, and mutation failure alert banners.
+  - Retained UI restriction blocking customer status changes while documenting backend permission discrepancy.
+  - Maintained zero schema duplication: verified direct import of `createTicketSchema` from `apps/api`.
+- **Why I changed it:** Ensures rock-solid reliability, complete test coverage, and strict compliance with the real SupportDesk API contract.
+- **How I checked the result:**
+  - `npm --prefix apps/web test` (`vitest run --reporter=verbose`): **8 test files passed, 38 tests passed, 0 failed**.
+  - `node scratch/live_e2e_runner.mjs`: Real HTTP assertions passed against `supportdesk_test` on `localhost:3001`.
+- **What I learned:** Never mark an integration flow complete without running it against the real database and logging the raw network payloads.
+
