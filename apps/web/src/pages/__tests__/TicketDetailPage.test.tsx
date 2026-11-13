@@ -327,5 +327,80 @@ describe('TicketDetailPage', () => {
 
     expect(textarea).toHaveValue('');
   });
+
+  it('displays error banner when status change fails', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 2, name: 'Bob Agent', email: 'bob@supportdesk.io', role: 'agent' },
+      isAuthenticated: true,
+      logout: vi.fn(),
+    } as any);
+
+    mockUseTicket.mockReturnValue({
+      data: mockTicketData,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    mockUseComments.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    mockUpdateMutateAsync.mockRejectedValue(
+      new ApiError(400, 'BAD_REQUEST', 'Invalid status transition from resolved to open'),
+    );
+
+    renderPage();
+
+    const statusSelect = screen.getByLabelText(/change status/i);
+    fireEvent.change(statusSelect, { target: { value: 'resolved' } });
+
+    expect(
+      await screen.findByText('Invalid status transition from resolved to open'),
+    ).toBeInTheDocument();
+  });
+
+  it('displays error banner when comment submission fails', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 2, name: 'Bob Agent', email: 'bob@supportdesk.io', role: 'agent' },
+      isAuthenticated: true,
+      logout: vi.fn(),
+    } as any);
+
+    mockUseTicket.mockReturnValue({
+      data: mockTicketData,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    mockUseComments.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    mockCreateCommentMutateAsync.mockRejectedValue(
+      new ApiError(500, 'INTERNAL_SERVER_ERROR', 'Database write failed'),
+    );
+
+    renderPage();
+
+    const textarea = screen.getByPlaceholderText(/type your response or update here/i);
+    fireEvent.change(textarea, { target: { value: 'Important update' } });
+
+    const postBtn = screen.getByRole('button', { name: /post comment/i });
+    fireEvent.click(postBtn);
+
+    expect(await screen.findByText('Database write failed')).toBeInTheDocument();
+  });
 });
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as useTicketsHook from '../../features/tickets/hooks/useTickets';
@@ -143,6 +143,50 @@ describe('CreateTicketPage', () => {
     expect(
       screen.getByText('Description contains sensitive patterns'),
     ).toBeInTheDocument();
+  });
+
+  it('prevents double submission when submit button is clicked while request is pending', async () => {
+    let resolveMutation!: (value: any) => void;
+    mockMutateAsync.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveMutation = resolve;
+        }),
+    );
+
+    renderPage();
+
+    fireEvent.input(screen.getByLabelText(/ticket subject/i), {
+      target: { value: 'Valid Title Here' },
+    });
+    fireEvent.input(screen.getByLabelText(/detailed description/i), {
+      target: { value: 'Valid description with sufficient length.' },
+    });
+
+    const submitBtn = screen.getByRole('button', { name: /submit ticket/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /creating ticket/i })).toBeDisabled();
+    });
+
+    // Attempt second click while pending
+    fireEvent.click(screen.getByRole('button', { name: /creating ticket/i }));
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveMutation({
+        id: 99,
+        reference: 'TCK-2026-0099',
+        title: 'Valid Title Here',
+        description: 'Valid description with sufficient length.',
+        status: 'open',
+        priority: 'P3',
+      });
+    });
+
+    expect(await screen.findByText('Ticket Detail Destination')).toBeInTheDocument();
   });
 });
 

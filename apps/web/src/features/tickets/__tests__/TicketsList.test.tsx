@@ -188,4 +188,68 @@ describe('TicketsList', () => {
       status: 'in_progress',
     });
   });
+
+  it('resets page to 1 when search filter changes', () => {
+    const onParamsChange = vi.fn();
+
+    mockUseTickets.mockReturnValue({
+      data: {
+        tickets: sampleTickets,
+        meta: { page: 3, limit: 10, total: 30, totalPages: 3 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <TicketsList queryParams={{ page: 3, limit: 10 }} onParamsChange={onParamsChange} />
+      </MemoryRouter>,
+    );
+
+    const searchInput = screen.getByLabelText(/search tickets/i);
+    fireEvent.change(searchInput, { target: { value: 'timeout' } });
+    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+
+    expect(onParamsChange).toHaveBeenCalled();
+    const updater = onParamsChange.mock.calls[0][0];
+    expect(updater({ page: 3, limit: 10 })).toEqual({
+      page: 1,
+      limit: 10,
+      search: 'timeout',
+    });
+  });
+
+  it('handles totalPages = 0 and keeps pagination buttons disabled', () => {
+    mockUseTickets.mockReturnValue({
+      data: {
+        tickets: sampleTickets,
+        meta: { page: 1, limit: 10, total: 0, totalPages: 0 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <TicketsList queryParams={{ page: 1, limit: 10 }} onParamsChange={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByText((_, el) => el?.textContent?.replace(/\s+/g, ' ').trim() === 'Page 1 of 1'),
+    ).toBeInTheDocument();
+
+    const prevBtn = screen.getByRole('button', { name: /previous page/i });
+    const nextBtn = screen.getByRole('button', { name: /next page/i });
+
+    expect(prevBtn).toBeDisabled();
+    expect(nextBtn).toBeDisabled();
+  });
 });
