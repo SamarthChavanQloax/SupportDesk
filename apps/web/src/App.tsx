@@ -2,7 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './lib/auth';
+import { CreateTicketPage } from './pages/CreateTicketPage';
 import { LoginPage } from './pages/LoginPage';
+import { TicketDetailPage } from './pages/TicketDetailPage';
 import { TicketsPage } from './pages/TicketsPage';
 
 const queryClient = new QueryClient({
@@ -10,6 +12,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 1000 * 30, // 30 seconds
     },
   },
 });
@@ -23,6 +26,8 @@ export function AppRoutes() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/tickets" element={<TicketsPage />} />
+        <Route path="/tickets/new" element={<CreateTicketPage />} />
+        <Route path="/tickets/:id" element={<TicketDetailPage />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/tickets" replace />} />
@@ -44,4 +49,3 @@ export function App() {
 }
 
 export default App;
-
