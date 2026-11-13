@@ -105,3 +105,28 @@
   - `npm --prefix apps/web test` (`vitest run`): **7 test files passed (7), 27 tests passed (27)**.
   - Audited `apps/web/src`: Verified `fetch(` is strictly isolated to `src/lib/api-client.ts`.
 - **What I learned:** Integrating hierarchical TanStack Query keys (`['tickets', 'detail', id, 'comments']`) ensures that mutations instantly invalidate all affected lists and detail views without full page reloads or stale cache flicker.
+
+---
+
+## Entry 21 — Day 14: Strict Verification, Contract Audit, and Live Test Run
+- **Date:** 13 November 2026
+- **Goal:** Conduct a rigorous audit of the Day 14 implementation: resolve schema validation boundaries, verify mid-session 401 handling, add missing edge-case unit tests (filter reset, totalPages=0, double-submit guard, cache invalidation, mutation failure banners), and execute the live 9-step customer-to-agent workflow against the `supportdesk_test` PostgreSQL database.
+- **Prompt used:**
+  > "Act as a senior React/TypeScript engineer, QA automation engineer and strict code reviewer. Verify everything yourself, finish whatever is missing, test it for real, and fix every bug you find. Paste real command output for every claim. Execute the live flow against Docker supportdesk_test (DATABASE_URL must contain _test). Show createTicketSchema in full, resolve 3-255 vs 1-200, audit 401 handling, list all tests across all test files with new pass counts, document backend status rule under LEAD DECISIONS NEEDED, show git diff stats, and do not push."
+- **Summary of AI response:**
+  1. Ran PostgreSQL container `supportdesk-postgres` on port 5433 and seeded `supportdesk_test` with 6 users and 66 tickets.
+  2. Executed live 9-step acceptance flow + 4 edge cases against backend on port 3001, confirming ticket creation, queue visibility, public comment, internal note confidentiality, status update to `in_progress`, and zero secret leaks.
+  3. Expanded test suite to 8 test files and 38 tests, covering query key factories, mutation cache invalidations, page resets on filter change, `totalPages = 0`, double-submit guards, and error banners.
+  4. Resolved schema contract: confirmed `createTicketSchema` in `ticket.validation.ts` and OpenAPI spec enforce `title` 3–255 and `description` $\ge 5$.
+  5. Documented 401 mid-session handling (`apiClient` -> `logout()` -> `queryClient.clear()` -> redirect to `/login`) and token storage risk.
+  6. Documented backend customer status update gap under Lead Decisions Needed.
+- **What I changed or rejected:**
+  - Added dedicated tests for `totalPages = 0`, search filter page reset, double-submit prevention during pending mutations, and mutation failure alert banners.
+  - Retained UI restriction blocking customer status changes while documenting backend permission discrepancy.
+  - Maintained zero schema duplication: verified direct import of `createTicketSchema` from `apps/api`.
+- **Why I changed it:** Ensures rock-solid reliability, complete test coverage, and strict compliance with the real SupportDesk API contract.
+- **How I checked the result:**
+  - `npm --prefix apps/web test` (`vitest run --reporter=verbose`): **8 test files passed, 38 tests passed, 0 failed**.
+  - `node scratch/live_e2e_runner.mjs`: Real HTTP assertions passed against `supportdesk_test` on `localhost:3001`.
+- **What I learned:** Never mark an integration flow complete without running it against the real database and logging the raw network payloads.
+
