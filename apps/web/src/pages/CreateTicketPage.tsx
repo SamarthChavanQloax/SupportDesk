@@ -19,6 +19,7 @@ export function CreateTicketPage() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateTicketFormValues>({
     resolver: zodResolver(createTicketSchema),
@@ -45,6 +46,29 @@ export function CreateTicketPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         setServerError(err.message);
+
+        // Map field-level validation details from API 400 responses
+        if (Array.isArray(err.details)) {
+          for (const item of err.details) {
+            if (
+              item.field &&
+              ['title', 'description', 'priority', 'category'].includes(item.field)
+            ) {
+              setError(item.field as keyof CreateTicketFormValues, {
+                message: item.message,
+              });
+            }
+          }
+        } else if (err.details && typeof err.details === 'object') {
+          for (const [key, msg] of Object.entries(err.details)) {
+            if (
+              ['title', 'description', 'priority', 'category'].includes(key) &&
+              typeof msg === 'string'
+            ) {
+              setError(key as keyof CreateTicketFormValues, { message: msg });
+            }
+          }
+        }
       } else if (err instanceof Error) {
         setServerError(err.message);
       } else {
@@ -211,3 +235,4 @@ export function CreateTicketPage() {
     </AppLayout>
   );
 }
+

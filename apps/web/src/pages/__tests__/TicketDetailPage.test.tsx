@@ -143,6 +143,36 @@ describe('TicketDetailPage', () => {
     expect(screen.getByText('Ticket Not Found')).toBeInTheDocument();
   });
 
+  it('renders 403 Access Denied alert when customer tries to access another customer ticket', () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 10, name: 'Alice Customer', email: 'alice@client.com', role: 'customer' },
+      isAuthenticated: true,
+      logout: vi.fn(),
+    } as any);
+
+    mockUseTicket.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError(403, 'FORBIDDEN', 'Access denied to this ticket'),
+      refetch: vi.fn(),
+    } as any);
+
+    mockUseComments.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    renderPage();
+    expect(screen.getByText('Access Denied')).toBeInTheDocument();
+    expect(
+      screen.getByText('You do not have permission to view this ticket.'),
+    ).toBeInTheDocument();
+  });
+
   it('renders ticket details, comments, and internal note badges for agent', () => {
     mockUseAuth.mockReturnValue({
       user: { id: 2, name: 'Bob Agent', email: 'bob@supportdesk.io', role: 'agent' },
@@ -298,3 +328,4 @@ describe('TicketDetailPage', () => {
     expect(textarea).toHaveValue('');
   });
 });
+

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Ticket, TicketPriority, TicketQueryParams, TicketStatus } from '../api/tickets.api';
 import { useTickets } from '../hooks/useTickets';
@@ -22,6 +22,10 @@ function formatDate(isoDate: string): string {
 export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState(queryParams.search ?? '');
+
+  useEffect(() => {
+    setSearchInput(queryParams.search ?? '');
+  }, [queryParams.search]);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useTickets(queryParams);
 
@@ -378,3 +382,4 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
     </div>
   );
 }
+

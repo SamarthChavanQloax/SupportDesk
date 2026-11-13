@@ -117,4 +117,32 @@ describe('CreateTicketPage', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Customer account is suspended');
   });
+
+  it('maps server-side 400 validation error details directly to field errors', async () => {
+    mockMutateAsync.mockRejectedValue(
+      new ApiError(400, 'VALIDATION_ERROR', 'Validation failed', [
+        { field: 'title', message: 'Subject contains prohibited characters' },
+        { field: 'description', message: 'Description contains sensitive patterns' },
+      ]),
+    );
+
+    renderPage();
+
+    fireEvent.input(screen.getByLabelText(/ticket subject/i), {
+      target: { value: 'Valid Title Here' },
+    });
+    fireEvent.input(screen.getByLabelText(/detailed description/i), {
+      target: { value: 'Valid description with sufficient length.' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /submit ticket/i }));
+
+    expect(
+      await screen.findByText('Subject contains prohibited characters'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Description contains sensitive patterns'),
+    ).toBeInTheDocument();
+  });
 });
+

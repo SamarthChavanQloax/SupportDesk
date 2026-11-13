@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient, configureApiAuth } from './api-client';
 
 export type UserRole = 'customer' | 'agent' | 'admin';
@@ -60,12 +61,14 @@ function readStoredSession(): StoredSession | null {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<StoredSession | null>(() => readStoredSession());
 
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    queryClient.clear();
     setSession(null);
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     configureApiAuth(

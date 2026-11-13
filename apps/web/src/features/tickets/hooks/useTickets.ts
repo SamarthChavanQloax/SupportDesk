@@ -60,11 +60,15 @@ export function useTicket(id: number): UseQueryResult<Ticket> {
 /**
  * Query for fetching comments on a ticket
  */
-export function useComments(ticketId: number): UseQueryResult<TicketComment[]> {
+export function useComments(
+  ticketId: number,
+  options?: { enabled?: boolean },
+): UseQueryResult<TicketComment[]> {
   return useQuery({
     queryKey: ticketKeys.comments(ticketId),
     queryFn: () => fetchComments(ticketId),
-    enabled: Number.isInteger(ticketId) && ticketId > 0,
+    enabled:
+      (options?.enabled ?? true) && Number.isInteger(ticketId) && ticketId > 0,
   });
 }
 
