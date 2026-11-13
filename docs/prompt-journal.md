@@ -79,3 +79,29 @@
   - `npm --prefix apps/web test` (`vitest run`): 3 test files passed, 8 tests passed.
   - Audited `apps/web/src` (excluding `__tests__`) to verify `fetch(` appears only in `src/lib/api-client.ts` and zero hardcoded `http://localhost` URLs exist in `src/`.
 - **What I learned:** Inspecting the real backend Zod schemas (`loginSchema` trimming/lowercasing email) and response envelope (`{ data, error, meta }`) before writing frontend types eliminates contract mismatches early.
+
+---
+
+## Entry 20 — Day 14: Ticket Screens End to End (List, Detail with Comments, Create Form)
+- **Date:** 13 November 2026
+- **Goal:** Extend the Day 13 frontend foundation into a full ticket-management experience on branch `feat/web-ticket-screens`. Implement server-backed pagination and filters, status badges, ticket details with chronological comment thread and internal note confidentiality, ticket creation form reusing the API's exact Zod schema, and TanStack Query mutations with cache invalidation.
+- **Prompt used:**
+  > "Act as a senior React/TypeScript engineer working on SupportDesk. Inspect the actual ticket API contract, existing frontend structure and Day 13 API client. Plan a ticket list screen with server-backed pagination, only the filters supported by the API, and consistent status badges. Use TanStack Query and the project's existing patterns. Specify query keys, query parameters, response types, loading/empty/error states and tests. Do not invent endpoints, fields, statuses, pagination formats or dependencies. Do not put fetch/API calls in components. First return a file-by-file plan; do not edit code."
+- **Summary of AI response:** Planned and implemented:
+  1. `features/tickets/schema/ticket-schema.ts`: Direct import and re-export of `createTicketSchema` from `../../../../../api/src/validations/ticket.validation.ts` via `@hookform/resolvers/zod`.
+  2. `features/tickets/api/tickets.api.ts`: Typed functions for `fetchTickets`, `fetchTicketById`, `createTicket`, `updateTicket`, `fetchComments`, and `createComment`.
+  3. `features/tickets/hooks/useTickets.ts`: Hierarchical query keys (`ticketKeys`) and TanStack Query hooks/mutations with automated cache invalidation.
+  4. `features/tickets/components/StatusBadge.tsx`: Reusable status and priority badges mapping all 5 backend statuses (`open`, `in_progress`, `waiting_on_customer`, `resolved`, `closed`).
+  5. `features/tickets/components/TicketsList.tsx`: Server-backed filters (status, priority, search), pagination controls (prev, next, page numbers), loading, empty, and error states.
+  6. `pages/TicketDetailPage.tsx`: Ticket header, agent status transition dropdown, chronological comment thread, internal note styling, and add-comment form with role-based internal note toggle.
+  7. `pages/CreateTicketPage.tsx`: React Hook Form wired to shared `createTicketSchema` with field validation errors, submitting state, and navigation to created ticket.
+- **What I changed or rejected:**
+  - Rejected creating a frontend copy of `createTicketSchema`; imported the exact Zod schema directly from `apps/api/src/validations/ticket.validation.ts`.
+  - Rejected filtering ticket list in-memory in the browser; bound pagination and filters (`page`, `limit`, `status`, `priority`, `search`) to server query params.
+  - Rejected exposing the internal note checkbox or status transition dropdown to customers; restricted them strictly to agents and admins in UI and relied on backend 403 enforcement.
+- **Why I changed it:** Prevents schema drift between frontend and backend, enforces business confidentiality, and ensures cache and server state stay synchronized.
+- **How I checked the result:**
+  - `npm --prefix apps/web run build` (`tsc -b && vite build`): Exited `0`, 198 modules transformed.
+  - `npm --prefix apps/web test` (`vitest run`): **7 test files passed (7), 27 tests passed (27)**.
+  - Audited `apps/web/src`: Verified `fetch(` is strictly isolated to `src/lib/api-client.ts`.
+- **What I learned:** Integrating hierarchical TanStack Query keys (`['tickets', 'detail', id, 'comments']`) ensures that mutations instantly invalidate all affected lists and detail views without full page reloads or stale cache flicker.
