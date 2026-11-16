@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
+import { Button, Input, Select, Textarea } from '../components/ui';
 import { useCreateTicket } from '../features/tickets/hooks/useTickets';
 import {
   createTicketSchema,
@@ -86,7 +87,7 @@ export function CreateTicketPage() {
         <div>
           <Link
             to="/tickets"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-[#2563EB]"
           >
             <span aria-hidden="true">&larr;</span> Back to ticket queue
           </Link>
@@ -115,124 +116,69 @@ export function CreateTicketPage() {
           className="space-y-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-xs sm:p-8"
         >
           {/* Subject / Title */}
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-semibold text-[#334155]"
-            >
-              Ticket Subject <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="title"
-              type="text"
-              placeholder="Brief summary of the issue (e.g. Payment gateway timeout on checkout)"
-              aria-invalid={errors.title ? 'true' : 'false'}
-              aria-describedby={errors.title ? 'title-error' : undefined}
-              className="mt-1.5 block w-full rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm text-[#334155] placeholder:text-slate-400 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 focus:outline-none"
-              {...register('title')}
-            />
-            {errors.title ? (
-              <p id="title-error" className="mt-1.5 text-xs font-medium text-rose-600">
-                {errors.title.message}
-              </p>
-            ) : null}
-          </div>
+          <Input
+            label="Ticket Subject"
+            required
+            placeholder="Brief summary of the issue (e.g. Payment gateway timeout on checkout)"
+            error={errors.title?.message}
+            {...register('title')}
+          />
 
           {/* Priority & Category Grid */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="priority"
-                className="block text-sm font-semibold text-[#334155]"
-              >
-                Priority <span className="text-rose-500">*</span>
-              </label>
-              <select
-                id="priority"
-                aria-invalid={errors.priority ? 'true' : 'false'}
-                aria-describedby={errors.priority ? 'priority-error' : undefined}
-                className="mt-1.5 block w-full rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm text-[#334155] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 focus:outline-none"
-                {...register('priority')}
-              >
-                <option value="P1">P1 - Critical (System down / Blocking)</option>
-                <option value="P2">P2 - High (Severe disruption)</option>
-                <option value="P3">P3 - Medium (Normal business impact)</option>
-                <option value="P4">P4 - Low (General inquiry / Minor)</option>
-              </select>
-              {errors.priority ? (
-                <p id="priority-error" className="mt-1.5 text-xs font-medium text-rose-600">
-                  {errors.priority.message}
-                </p>
-              ) : null}
-            </div>
-
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-semibold text-[#334155]"
-              >
-                Category <span className="text-xs font-normal text-slate-400">(optional)</span>
-              </label>
-              <input
-                id="category"
-                type="text"
-                placeholder="Billing, Technical, Security..."
-                aria-invalid={errors.category ? 'true' : 'false'}
-                aria-describedby={errors.category ? 'category-error' : undefined}
-                className="mt-1.5 block w-full rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm text-[#334155] placeholder:text-slate-400 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 focus:outline-none"
-                {...register('category')}
-              />
-              {errors.category ? (
-                <p id="category-error" className="mt-1.5 text-xs font-medium text-rose-600">
-                  {errors.category.message}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-semibold text-[#334155]"
+            <Select
+              label="Priority"
+              required
+              error={errors.priority?.message}
+              {...register('priority')}
             >
-              Detailed Description <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              id="description"
-              rows={5}
-              placeholder="Provide relevant details, steps to reproduce, error codes, and business impact..."
-              aria-invalid={errors.description ? 'true' : 'false'}
-              aria-describedby={errors.description ? 'description-error' : undefined}
-              className="mt-1.5 block w-full rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm text-[#334155] placeholder:text-slate-400 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 focus:outline-none"
-              {...register('description')}
+              <option value="P1">P1 - Critical (System down / Blocking)</option>
+              <option value="P2">P2 - High (Severe disruption)</option>
+              <option value="P3">P3 - Medium (Normal business impact)</option>
+              <option value="P4">P4 - Low (General inquiry / Minor)</option>
+            </Select>
+
+            <Input
+              label="Category"
+              placeholder="Billing, Technical, Security..."
+              helperText="Optional classification for routing"
+              error={errors.category?.message}
+              {...register('category')}
             />
-            {errors.description ? (
-              <p id="description-error" className="mt-1.5 text-xs font-medium text-rose-600">
-                {errors.description.message}
-              </p>
-            ) : null}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          {/* Detailed Description */}
+          <Textarea
+            label="Detailed Description"
+            required
+            rows={5}
+            placeholder="Provide all relevant details, steps to reproduce, error messages or environment details..."
+            helperText="Minimum 5 characters. Be specific so support agents can help quickly."
+            error={errors.description?.message}
+            {...register('description')}
+          />
+
+          {/* Actions Bar */}
+          <div className="flex flex-col-reverse items-center justify-end gap-3 pt-3 sm:flex-row">
             <Link
               to="/tickets"
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#2563EB] sm:w-auto"
             >
               Cancel
             </Link>
-            <button
+            <Button
               type="submit"
-              disabled={isPending}
-              className="inline-flex items-center justify-center rounded-lg bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
+              variant="primary"
+              size="md"
+              isLoading={isPending}
+              loadingText="Creating ticket..."
+              className="w-full sm:w-auto"
             >
-              {isPending ? 'Creating ticket...' : 'Submit Ticket'}
-            </button>
+              Submit Ticket
+            </Button>
           </div>
         </form>
       </div>
     </AppLayout>
   );
 }
-

@@ -1,8 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
+import {
+  Badge,
+  Button,
+  Modal,
+  PriorityBadge,
+  StatusBadge,
+  Textarea,
+} from '../components/ui';
 import type { TicketComment, TicketStatus } from '../features/tickets/api/tickets.api';
-import { PriorityBadge, StatusBadge } from '../features/tickets/components/StatusBadge';
 import {
   useComments,
   useCreateComment,
@@ -64,28 +71,39 @@ export function TicketDetailPage() {
 
   // Status transition state
   const [statusErrorMsg, setStatusErrorMsg] = useState<string | null>(null);
+  const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
 
   if (Number.isNaN(ticketId) || ticketId <= 0) {
     return (
       <AppLayout>
-        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-rose-800">
-          <h2 className="text-base font-semibold">Invalid Ticket ID</h2>
-          <p className="mt-1 text-sm">Please select a valid ticket from the queue.</p>
-          <Link
-            to="/tickets"
-            className="mt-4 inline-flex items-center rounded-lg bg-rose-700 px-3.5 py-2 text-xs font-semibold text-white"
-          >
-            Back to Tickets
-          </Link>
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-900"
+        >
+          <h2 className="text-base font-bold">Invalid Ticket ID</h2>
+          <p className="mt-1 text-sm text-rose-700">The ticket identifier in the URL is invalid.</p>
+          <div className="mt-4">
+            <Link
+              to="/tickets"
+              className="inline-flex items-center rounded-lg bg-rose-700 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-800"
+            >
+              Back to Tickets
+            </Link>
+          </div>
         </div>
       </AppLayout>
     );
   }
 
+  // Loading state
   if (isTicketLoading) {
     return (
       <AppLayout>
-        <div role="status" aria-live="polite" className="rounded-xl border border-slate-200 bg-white p-12 text-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-slate-200 bg-white p-16 text-center shadow-xs"
+        >
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-blue-600 border-t-transparent" />
           <p className="mt-3 text-sm font-medium text-slate-600">Loading ticket details...</p>
         </div>
@@ -93,40 +111,46 @@ export function TicketDetailPage() {
     );
   }
 
+  // Error state
   if (isTicketError || !ticket) {
     const isNotFound = ticketError instanceof ApiError && ticketError.status === 404;
     const isForbidden = ticketError instanceof ApiError && ticketError.status === 403;
-    const errorTitle = isNotFound
-      ? 'Ticket Not Found'
-      : isForbidden
-      ? 'Access Denied'
-      : 'Unable to load ticket';
-    const errorDescription = isNotFound
-      ? 'The requested ticket could not be found.'
-      : isForbidden
-      ? 'You do not have permission to view this ticket.'
-      : ticketError instanceof Error
-      ? ticketError.message
-      : 'The requested ticket could not be found or you do not have permission to view it.';
 
     return (
       <AppLayout>
-        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-900">
-          <h2 className="text-lg font-semibold">{errorTitle}</h2>
-          <p className="mt-2 text-sm text-rose-700">{errorDescription}</p>
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-900 shadow-xs"
+        >
+          <h2 className="text-lg font-bold">
+            {isNotFound
+              ? 'Ticket Not Found'
+              : isForbidden
+                ? 'Access Denied'
+                : 'Unable to Load Ticket'}
+          </h2>
+          <p className="mt-2 text-sm text-rose-700">
+            {isNotFound
+              ? `Ticket #${ticketId} does not exist or has been removed.`
+              : isForbidden
+                ? 'You do not have permission to view this ticket.'
+                : ticketError instanceof Error
+                  ? ticketError.message
+                  : 'An unexpected error occurred while fetching the ticket.'}
+          </p>
           <div className="mt-5 flex justify-center gap-3">
-            {!isForbidden && !isNotFound ? (
-              <button
-                type="button"
+            {!isNotFound && !isForbidden ? (
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => void refetchTicket()}
-                className="rounded-lg bg-rose-700 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-800"
               >
                 Retry
-              </button>
+              </Button>
             ) : null}
             <Link
               to="/tickets"
-              className="rounded-lg border border-rose-300 bg-white px-4 py-2 text-xs font-semibold text-rose-800 hover:bg-rose-50"
+              className="inline-flex items-center rounded-lg border border-rose-300 bg-white px-4 py-2 text-xs font-semibold text-rose-800 hover:bg-rose-50"
             >
               Back to Tickets
             </Link>
@@ -190,7 +214,7 @@ export function TicketDetailPage() {
         <div className="flex items-center justify-between">
           <Link
             to="/tickets"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-[#2563EB]"
           >
             <span aria-hidden="true">&larr;</span> Back to ticket queue
           </Link>
@@ -210,9 +234,9 @@ export function TicketDetailPage() {
                 <StatusBadge status={ticket.status} />
                 <PriorityBadge priority={ticket.priority} />
                 {ticket.category ? (
-                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                  <Badge variant="neutral" size="sm">
                     {ticket.category}
-                  </span>
+                  </Badge>
                 ) : null}
               </div>
               <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900">
@@ -222,19 +246,31 @@ export function TicketDetailPage() {
 
             {/* Agent / Admin Status Transition Control */}
             {isAgentOrAdmin ? (
-              <div className="flex flex-col items-start gap-1 sm:items-end">
-                <label
-                  htmlFor="status-transition-select"
-                  className="text-xs font-semibold text-slate-500"
-                >
-                  Change Status
-                </label>
+              <div className="flex flex-col items-start gap-2 sm:items-end">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="status-transition-select"
+                    className="text-xs font-semibold text-slate-500 whitespace-nowrap"
+                  >
+                    Change Status
+                  </label>
+                  {ticket.status !== 'closed' ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsCloseModalOpen(true)}
+                    >
+                      Close Ticket
+                    </Button>
+                  ) : null}
+                </div>
                 <select
                   id="status-transition-select"
+                  aria-label="Change ticket status"
                   value={ticket.status}
-                  onChange={(e) => void handleStatusChange(e.target.value as TicketStatus)}
                   disabled={updateTicketMutation.isPending}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs focus:border-blue-600 focus:outline-none disabled:opacity-60"
+                  onChange={(e) => void handleStatusChange(e.target.value as TicketStatus)}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none disabled:opacity-50"
                 >
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
@@ -329,61 +365,66 @@ export function TicketDetailPage() {
                   ? commentsError.message
                   : 'Unable to load comments.'}
               </p>
-              <button
-                type="button"
-                onClick={() => void refetchComments()}
-                className="mt-2 font-semibold text-rose-900 underline"
-              >
-                Retry loading comments
-              </button>
+              <div className="mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void refetchComments()}
+                >
+                  Retry loading comments
+                </Button>
+              </div>
             </div>
           ) : null}
 
           {/* Empty comments */}
           {!isCommentsLoading && comments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <p className="text-sm font-medium text-slate-700">No comments yet</p>
-              <p className="mt-1 text-xs text-slate-400">
-                Be the first to leave a response or update on this ticket.
-              </p>
+            <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+              No comments yet. Post the first response to begin the conversation.
             </div>
           ) : null}
 
-          {/* Chronological comment thread */}
+          {/* Comment Thread List */}
           {comments.length > 0 ? (
             <div className="space-y-3">
               {comments.map((comment: TicketComment) => {
                 const isInternalNote = comment.isInternal;
+                const authorIsAgent =
+                  comment.author?.role === 'agent' || comment.author?.role === 'admin';
+
                 return (
                   <article
                     key={comment.id}
                     className={`rounded-xl border p-4 shadow-xs transition ${
                       isInternalNote
-                        ? 'border-amber-200 bg-amber-50/70'
-                        : 'border-slate-200 bg-white'
+                        ? 'border-amber-200 bg-amber-50/60'
+                        : authorIsAgent
+                          ? 'border-blue-100 bg-blue-50/30'
+                          : 'border-slate-200 bg-white'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
-                          {comment.author?.name ? comment.author.name.charAt(0).toUpperCase() : 'U'}
+                        <span className="text-xs font-bold text-slate-800">
+                          {comment.author?.name ?? `User #${comment.authorId}`}
                         </span>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900">
-                            {comment.author?.name ?? `User #${comment.authorId}`}
-                          </p>
-                          <p className="text-[11px] text-slate-500">{formatDate(comment.createdAt)}</p>
-                        </div>
+                        <span className="text-[11px] text-slate-500">
+                          ({comment.author?.role ?? 'user'})
+                        </span>
+                        {isInternalNote ? (
+                          <Badge variant="warning" size="sm">
+                            Internal Note
+                          </Badge>
+                        ) : null}
                       </div>
-
-                      {isInternalNote ? (
-                        <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-900 uppercase">
-                          Internal Note
-                        </span>
-                      ) : null}
+                      <time
+                        dateTime={comment.createdAt}
+                        className="text-[11px] text-slate-400"
+                      >
+                        {formatDate(comment.createdAt)}
+                      </time>
                     </div>
-
-                    <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
+                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
                       {comment.body}
                     </p>
                   </article>
@@ -393,8 +434,11 @@ export function TicketDetailPage() {
           ) : null}
 
           {/* Add Comment Form */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900">Leave a reply</h3>
+          <form
+            onSubmit={handleCommentSubmit}
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs"
+          >
+            <h3 className="text-sm font-semibold text-slate-900">Add a Response</h3>
 
             {commentErrorMsg ? (
               <div
@@ -405,48 +449,86 @@ export function TicketDetailPage() {
               </div>
             ) : null}
 
-            <form onSubmit={handleCommentSubmit} className="mt-3 space-y-3">
-              <div>
-                <label htmlFor="comment-body" className="sr-only">
-                  Add comment
+            <div className="mt-3">
+              <Textarea
+                id="comment"
+                rows={3}
+                value={commentBody}
+                onChange={(e) => setCommentBody(e.target.value)}
+                placeholder="Type your response or update here..."
+                aria-label="Comment response text"
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              {/* Agent internal note toggle */}
+              {isAgentOrAdmin ? (
+                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isInternal}
+                    onChange={(e) => setIsInternal(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>
+                    Make internal note{' '}
+                    <span className="text-slate-400">
+                      (visible only to support agents and admins)
+                    </span>
+                  </span>
                 </label>
-                <textarea
-                  id="comment-body"
-                  rows={3}
-                  value={commentBody}
-                  onChange={(e) => setCommentBody(e.target.value)}
-                  placeholder="Type your response or update here..."
-                  className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none"
-                />
-              </div>
+              ) : (
+                <div />
+              )}
 
-              <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                {/* Agent/Admin internal note toggle */}
-                {isAgentOrAdmin ? (
-                  <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={isInternal}
-                      onChange={(e) => setIsInternal(e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
-                    />
-                    <span>Make internal note (visible only to support agents and admins)</span>
-                  </label>
-                ) : (
-                  <span />
-                )}
-
-                <button
-                  type="submit"
-                  disabled={createCommentMutation.isPending || !commentBody.trim()}
-                  className="inline-flex items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {createCommentMutation.isPending ? 'Posting comment...' : 'Post Comment'}
-                </button>
-              </div>
-            </form>
-          </div>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={createCommentMutation.isPending}
+                loadingText="Posting..."
+                disabled={!commentBody.trim()}
+              >
+                Post Comment
+              </Button>
+            </div>
+          </form>
         </section>
+
+        {/* Close Ticket Confirmation Modal */}
+        <Modal
+          isOpen={isCloseModalOpen}
+          onClose={() => setIsCloseModalOpen(false)}
+          title="Close Ticket Confirmation"
+          description={`Are you sure you want to close ticket ${ticket.reference}?`}
+          footer={
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCloseModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                isLoading={updateTicketMutation.isPending}
+                loadingText="Closing..."
+                onClick={async () => {
+                  await handleStatusChange('closed');
+                  setIsCloseModalOpen(false);
+                }}
+              >
+                Confirm Close
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-slate-600">
+            Closing this ticket indicates that all troubleshooting has concluded. The customer will see the ticket marked as closed.
+          </p>
+        </Modal>
       </div>
     </AppLayout>
   );

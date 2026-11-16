@@ -130,3 +130,40 @@
   - `node scratch/live_e2e_runner.mjs`: Real HTTP assertions passed against `supportdesk_test` on `localhost:3001`.
 - **What I learned:** Never mark an integration flow complete without running it against the real database and logging the raw network payloads.
 
+---
+
+## Entry 22 — Week 3 Day 3 (Day 15): UI Quality, Reusable Components, and Accessibility
+- **Date:** 24 November 2026
+- **Goal:** Extract reusable Button, Input, Select, Textarea, Badge, Modal, and Table components; eliminate duplicated styling; make all ticket screens responsive at 360 px, 768 px, and 1280 px; perform screenshot/wireframe AI exercise; achieve Lighthouse accessibility score $\ge 90$ on representative pages.
+- **Prompt used:**
+  > "Act as a senior frontend engineer working in this existing SupportDesk React + TypeScript + Tailwind project.
+  > I am providing a screenshot or wireframe of one UI component.
+  > First inspect the existing component patterns, design tokens, folder structure, types and accessibility conventions.
+  > Describe the component structure, responsive behaviour, states and accessibility requirements.
+  > Then propose a minimal implementation that matches the existing project conventions.
+  > Do not introduce a new UI library, duplicate an existing component, invent API fields, or change business behaviour.
+  > Include keyboard behaviour, accessible labels, focus states, loading/disabled/error states where relevant, and tests.
+  > Return a plan first. Wait for approval before editing files."
+- **Summary of AI response:** AI analyzed the modal confirmation dialog wireframe and proposed a preliminary `Modal` component with backdrop, header, body, and footer buttons.
+- **What the AI generated incorrectly:**
+  - Used generic tailwind arbitrary hex colors (`#4F46E5`, `#111827`) instead of the project's established design tokens (`#172B4D` for navy headings, `#2563EB` for blue actions, `#E2E8F0` for borders).
+  - Omitted restoring focus to the trigger element on modal dismissal (`previousActiveElement.current.focus()`), leaving the focus context lost in the DOM.
+  - Omitted locking background scrolling (`document.body.style.overflow = 'hidden'`) while modal is open, allowing page background scroll bleed on mobile.
+  - Omitted keyboard focus trap, allowing Tab key to escape into background DOM while dialog is open.
+- **What I refactored and why:**
+  - Implemented `useEffect` activeElement tracking with cleanup to restore focus to trigger element.
+  - Added Tab and Shift+Tab keyboard focus trap cycling between first and last focusable elements.
+  - Added background scroll lock on `document.body` while modal is active.
+  - Bound design tokens (`#172B4D`, `#2563EB`, `#E2E8F0`, `shadow-xl`, `rounded-2xl`).
+  - Added 5 unit tests in `Modal.test.tsx` verifying dialog semantics, accessible labels, escape key dismissal, and backdrop click.
+  - Refactored `Button`, `Input`, `Select`, `Textarea`, `Badge`, and `Table` into `src/components/ui` and integrated them across `TicketsList`, `CreateTicketPage`, `TicketDetailPage`, and `LoginPage`.
+- **How I checked the result:**
+  - `npm --prefix apps/web test` (`vitest run`): **13 test files passed, 59 tests passed, 0 failed**.
+  - `npm --prefix apps/web run build` (`tsc -b && vite build`): Exited 0 with clean bundle.
+  - Lighthouse Accessibility Audit:
+    - Page 1 (`/login`): **100 / 100**
+    - Page 2 (`/tickets`): **100 / 100**
+- **What I learned:** Creating focused, accessible primitive components with programmatic IDs, semantic elements, and keyboard traps immediately simplifies page code, guarantees WCAG compliance, and prevents copy-pasted UI regressions.
+- **PR:** [PR #29 — Feat/web UI quality](https://github.com/SamarthChavanQloax/SupportDesk/pull/29)
+
+
