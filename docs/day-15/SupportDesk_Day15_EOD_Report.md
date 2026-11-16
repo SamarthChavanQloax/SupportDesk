@@ -116,6 +116,43 @@ Appended **Entry 22 — Week 3 Day 3 (Day 15): UI Quality, Reusable Components, 
 - Lighthouse Login Report: `docs/day-15/lighthouse-login.report.json` & `lighthouse-login.report.html` (Score: **100**)
 - Lighthouse Tickets Report: `docs/day-15/lighthouse-tickets.report.json` & `lighthouse-tickets.report.html` (Score: **100**)
 
+#### 1. Authentication Screen (`/login`)
+- **Desktop View (1280 px):** Clean centered authentication card with semantic `<main>` landmark, floating logo badge, accessible inputs (`email`, `password`), visible focus ring, and full-width primary button.
+  
+  ![Login Desktop](./screenshots/login-desktop.png)
+
+- **Mobile View (360 px):** Responsive edge padding (`px-4`), legible inputs ($\ge 14$px font size preventing mobile zoom), and $\ge 44$px touch targets.
+  
+  ![Login Mobile](./screenshots/login-mobile.png)
+
+#### 2. Ticket Queue Screen (`/tickets`)
+- **Desktop View (1280 px):** Full-width semantic `<Table>` with accessible `role="region"`, column headers (`scope="col"`), high-contrast status and priority badges, search filter input, and pagination bar.
+  
+  ![Tickets List Desktop](./screenshots/tickets-list-desktop.png)
+
+- **Mobile View (360 px):** Automatic card-stack view (`md:hidden`), eliminating horizontal overflow, with touch-friendly ticket cards displaying title, status pill, priority indicator, and updated timestamp.
+  
+  ![Tickets List Mobile](./screenshots/tickets-list-mobile.png)
+
+#### 3. Create Ticket Screen (`/tickets/new`)
+- **Desktop View (1280 px):** Accessible form layout consuming shared `Input`, `Select`, `Textarea`, and `Button` components with `aria-required`, helper text, and real-time validation error alerts.
+  
+  ![Create Ticket Desktop](./screenshots/create-ticket-desktop.png)
+
+- **Mobile View (360 px):** Single-column stacked fields with accessible spacing, full-width touch-friendly submit button, and cancel action.
+  
+  ![Create Ticket Mobile](./screenshots/create-ticket-mobile.png)
+
+#### 4. Ticket Detail Screen (`/tickets/:id`)
+- **Desktop View (1280 px):** Complete ticket overview with status banner, priority badge, customer information, conversation thread with public and internal note badges, and comment form.
+  
+  ![Ticket Detail Desktop](./screenshots/ticket-detail-desktop.png)
+
+#### 5. Close Ticket Confirmation Modal
+- **Desktop View (1280 px):** Reusable accessible `<Modal>` component with backdrop blur, `role="dialog"`, `aria-modal="true"`, Tab/Shift+Tab focus trap, Escape key listener, and focus return to trigger button.
+  
+  ![Ticket Detail Modal](./screenshots/ticket-detail-modal.png)
+
 ### Test output
 ```text
  ✓ src/lib/__tests__/api-client.test.ts (3 tests)
@@ -162,3 +199,4 @@ Appended **Entry 22 — Week 3 Day 3 (Day 15): UI Quality, Reusable Components, 
    - **Network Request / Response Logs:** Record network traffic demonstrating that comments, status changes, and list queries execute correctly.
    - **User Feedback / Heuristic Checklist:** Document specific usability checkpoints (e.g. thumb accessibility, absence of horizontal scrolling, legible font size $\ge 14$px for inputs preventing iOS zoom, and clear visual confirmation upon submitting).
    - **Lighthouse Mobile Accessibility Audit:** Run Lighthouse in Mobile device mode to verify contrast ratios ($\ge 4.5:1$) and touch target spacing pass automated scrutiny with a score $\ge 90$.
+
