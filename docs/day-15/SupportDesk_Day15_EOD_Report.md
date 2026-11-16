@@ -148,6 +148,10 @@ Appended **Entry 22 — Week 3 Day 3 (Day 15): UI Quality, Reusable Components, 
   
   ![Ticket Detail Desktop](./screenshots/ticket-detail-desktop.png)
 
+- **Mobile View (360 px):** Vertically stacked layout with responsive header, 2-column metadata grid, full-width response box with internal note toggle, and easy thumb touch targets.
+  
+  ![Ticket Detail Mobile](./screenshots/ticket-detail-mobile.png)
+
 #### 5. Close Ticket Confirmation Modal
 - **Desktop View (1280 px):** Reusable accessible `<Modal>` component with backdrop blur, `role="dialog"`, `aria-modal="true"`, Tab/Shift+Tab focus trap, Escape key listener, and focus return to trigger button.
   
