@@ -164,5 +164,6 @@
     - Page 1 (`/login`): **100 / 100**
     - Page 2 (`/tickets`): **100 / 100**
 - **What I learned:** Creating focused, accessible primitive components with programmatic IDs, semantic elements, and keyboard traps immediately simplifies page code, guarantees WCAG compliance, and prevents copy-pasted UI regressions.
+- **PR:** [PR #29 — Feat/web UI quality](https://github.com/SamarthChavanQloax/SupportDesk/pull/29)
 
 

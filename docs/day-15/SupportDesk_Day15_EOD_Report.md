@@ -3,6 +3,7 @@
 **Project:** SupportDesk  
 **Roadmap task:** Week 3 — Day 3 (Day 15): UI Quality + Frontend Clean Code  
 **Branch:** `feat/web-ui-quality`  
+**PR:** [PR #29 — Feat/web UI quality](https://github.com/SamarthChavanQloax/SupportDesk/pull/29)  
 **Overall status:** **Done**
 
 ---
@@ -109,8 +110,9 @@ Appended **Entry 22 — Week 3 Day 3 (Day 15): UI Quality, Reusable Components, 
 ## Evidence
 
 ### PR
-- Branch: `feat/web-ui-quality`
-- Ready to open PR against base `feat/web-ticket-screens` (or `main` / `samarth`).
+- **Branch:** `feat/web-ui-quality`
+- **PR Link:** [PR #29 — Feat/web UI quality](https://github.com/SamarthChavanQloax/SupportDesk/pull/29)
+- **Status:** Open, Mergeable (`clean`), 4 commits (`c2e124d`), 34 changed files
 
 ### Screenshots / Reports
 - Lighthouse Login Report: `docs/day-15/lighthouse-login.report.json` & `lighthouse-login.report.html` (Score: **100**)
