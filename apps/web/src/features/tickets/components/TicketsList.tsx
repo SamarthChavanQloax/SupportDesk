@@ -2,7 +2,17 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Ticket, TicketPriority, TicketQueryParams, TicketStatus } from '../api/tickets.api';
 import { useTickets } from '../hooks/useTickets';
-import { PriorityBadge, StatusBadge } from './StatusBadge';
+import {
+  Button,
+  PriorityBadge,
+  StatusBadge,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../../components/ui';
 
 interface TicketsListProps {
   queryParams: TicketQueryParams;
@@ -121,21 +131,19 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
             <option value="P4">P4 - Low</option>
           </select>
 
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-          >
+          <Button type="submit" variant="secondary" size="sm">
             Search
-          </button>
+          </Button>
 
           {hasActiveFilters ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={handleResetFilters}
-              className="rounded-lg px-2.5 py-2 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
               Reset
-            </button>
+            </Button>
           ) : null}
         </form>
 
@@ -172,13 +180,15 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
           <p className="mt-1 text-sm text-rose-700">
             {error instanceof Error ? error.message : 'An unexpected error occurred while loading tickets.'}
           </p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="mt-4 inline-flex items-center rounded-lg bg-rose-700 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-rose-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
-          >
-            Retry
-          </button>
+          <div className="mt-4">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </Button>
+          </div>
         </div>
       ) : null}
 
@@ -201,22 +211,24 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
               />
             </svg>
           </div>
-          <h2 className="mt-3 text-base font-semibold text-slate-800">
+          <h3 className="mt-4 text-base font-semibold text-slate-900">
             {hasActiveFilters ? 'No tickets match your filters' : 'No tickets in this workspace'}
-          </h2>
+          </h3>
           <p className="mt-1 text-sm text-slate-500">
             {hasActiveFilters
-              ? 'Try adjusting or clearing your status, priority, or search query.'
-              : 'Create your first customer support ticket to get started.'}
+              ? 'Try clearing your status, priority or search filters to find what you are looking for.'
+              : 'You have no support tickets yet. Create your first ticket to request assistance.'}
           </p>
           {hasActiveFilters ? (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Clear filters
-            </button>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetFilters}
+              >
+                Clear all filters
+              </Button>
+            </div>
           ) : (
             <Link
               to="/tickets/new"
@@ -231,7 +243,7 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
       {/* Populated queue: Mobile cards + Desktop table */}
       {!isLoading && !isError && tickets.length > 0 ? (
         <section aria-label="Support tickets list" className="space-y-4">
-          {/* Mobile cards */}
+          {/* Mobile cards (360px viewport) */}
           <div className="grid gap-3 md:hidden">
             {tickets.map((ticket: Ticket) => (
               <article
@@ -261,39 +273,27 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
             ))}
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs md:block">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                <tr>
-                  <th scope="col" className="px-5 py-3.5">
-                    Reference
-                  </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Subject
-                  </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Status
-                  </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Priority
-                  </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Customer / Assignee
-                  </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Updated
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+          {/* Desktop & Tablet Table (768px & 1280px viewports) */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Customer / Assignee</TableHead>
+                  <TableHead>Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {tickets.map((ticket: Ticket) => (
-                  <tr
+                  <TableRow
                     key={ticket.id}
+                    isInteractive
                     onClick={() => navigate(`/tickets/${ticket.id}`)}
-                    className="cursor-pointer transition hover:bg-slate-50/80"
                   >
-                    <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-semibold text-teal-700">
+                    <TableCell className="whitespace-nowrap font-mono text-xs font-semibold text-teal-700">
                       <Link
                         to={`/tickets/${ticket.id}`}
                         className="hover:underline focus:underline"
@@ -301,80 +301,86 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
                       >
                         {ticket.reference}
                       </Link>
-                    </td>
-                    <td className="max-w-xs px-5 py-4">
+                    </TableCell>
+                    <TableCell className="max-w-xs">
                       <p className="truncate font-medium text-slate-900">{ticket.title}</p>
                       {ticket.category ? (
                         <p className="mt-0.5 text-xs text-slate-500">{ticket.category}</p>
                       ) : null}
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <StatusBadge status={ticket.status} size="sm" />
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <PriorityBadge priority={ticket.priority} size="sm" />
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-600">
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-600">
                       <p className="font-medium text-slate-800">
-                        {ticket.customer?.name ?? `Customer #${ticket.customerId}`}
+                        {ticket.customer?.name || `Customer #${ticket.customerId}`}
                       </p>
                       <p className="text-slate-400">
-                        {ticket.assignee ? `Assigned to ${ticket.assignee.name}` : 'Unassigned'}
+                        {ticket.assignee
+                          ? `Assigned: ${ticket.assignee.name}`
+                          : 'Unassigned'}
                       </p>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs text-slate-500">
                       {formatDate(ticket.updatedAt)}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
-          {/* Server-backed Pagination Footer */}
-          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-xs sm:flex-row">
+          {/* Pagination controls */}
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs text-slate-500">
-              Showing <span className="font-semibold text-slate-700">{tickets.length}</span> of{' '}
-              <span className="font-semibold text-slate-700">{totalCount}</span> tickets
-              {isFetching ? <span className="ml-2 text-blue-600 font-medium">(Updating...)</span> : null}
+              Showing{' '}
+              <span className="font-semibold text-slate-800">
+                {tickets.length > 0 ? (currentPage - 1) * 10 + 1 : 0}
+              </span>{' '}
+              to{' '}
+              <span className="font-semibold text-slate-800">
+                {Math.min(currentPage * 10, totalCount)}
+              </span>{' '}
+              of <span className="font-semibold text-slate-800">{totalCount}</span> tickets
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-600">
-                Page <span className="font-semibold text-slate-800">{currentPage}</span> of{' '}
-                <span className="font-semibold text-slate-800">{totalPages === 0 ? 1 : totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  onParamsChange((prev) => ({
+                    ...prev,
+                    page: Math.max(1, currentPage - 1),
+                  }))
+                }
+                disabled={currentPage <= 1 || isFetching}
+                aria-label="Previous page"
+              >
+                &larr; Previous
+              </Button>
+
+              <span className="text-xs font-medium text-slate-600 px-1">
+                Page {currentPage} of {totalPages === 0 ? 1 : totalPages}
               </span>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() =>
-                    onParamsChange((prev) => ({
-                      ...prev,
-                      page: Math.max(1, currentPage - 1),
-                    }))
-                  }
-                  disabled={currentPage <= 1}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Previous page"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    onParamsChange((prev) => ({
-                      ...prev,
-                      page: currentPage + 1,
-                    }))
-                  }
-                  disabled={currentPage >= totalPages}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Next page"
-                >
-                  Next
-                </button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  onParamsChange((prev) => ({
+                    ...prev,
+                    page: currentPage + 1,
+                  }))
+                }
+                disabled={currentPage >= totalPages || totalPages === 0 || isFetching}
+                aria-label="Next page"
+              >
+                Next &rarr;
+              </Button>
             </div>
           </div>
         </section>
@@ -382,4 +388,3 @@ export function TicketsList({ queryParams, onParamsChange }: TicketsListProps) {
     </div>
   );
 }
-
