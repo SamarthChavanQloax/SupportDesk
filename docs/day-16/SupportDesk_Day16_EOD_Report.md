@@ -133,3 +133,4 @@ npm --prefix apps/web test -- --run
 
 ### How it was applied today
 During Day 16, 4 highly attractive additional AI features were identified (Ticket Summarization, Similar Ticket Detection via embeddings, Knowledge Base RAG, and Resolution QA check). Rather than improvising their implementation and risking unfinished, unvalidated code, they were documented as future backlog suggestions while strictly limiting Day 16 execution to the 2 defined deliverables: **Streamed Suggest Reply** and **Zod-validated Auto-categorise + Priority**.
+

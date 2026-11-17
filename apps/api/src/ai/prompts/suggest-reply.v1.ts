@@ -69,3 +69,4 @@ ${commentsHistory}
 --- INSTRUCTION ---
 Draft an appropriate public reply from SupportDesk to ${ticket.customerName || 'the customer'} addressing their latest message.`;
 }
+

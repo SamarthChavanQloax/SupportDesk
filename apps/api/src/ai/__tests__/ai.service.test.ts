@@ -307,3 +307,4 @@ describe('AiService - Auto-categorise + Priority (Zod Validated)', () => {
     ).rejects.toThrow(BadRequestError);
   });
 });
+
