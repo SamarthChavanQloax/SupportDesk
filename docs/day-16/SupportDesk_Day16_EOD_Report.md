@@ -134,3 +134,47 @@ npm --prefix apps/web test -- --run
 ### How it was applied today
 During Day 16, 4 highly attractive additional AI features were identified (Ticket Summarization, Similar Ticket Detection via embeddings, Knowledge Base RAG, and Resolution QA check). Rather than improvising their implementation and risking unfinished, unvalidated code, they were documented as future backlog suggestions while strictly limiting Day 16 execution to the 2 defined deliverables: **Streamed Suggest Reply** and **Zod-validated Auto-categorise + Priority**.
 
+---
+
+## 8. Feature Screenshots & End-to-End Testing Verification
+
+### Testing Accounts & Role Matrix
+
+| Role | Email | Password | Permissions & Tested Scope |
+| :--- | :--- | :--- | :--- |
+| **Customer** | `alice.customer@example.com` | `Password123!` | Created ticket #56 without staff AI tools; customer ownership enforced. |
+| **Agent** | `dave.agent@example.com` | `Password123!` | Ran **✨ AI Triage**; streamed **✨ Suggest Reply**; tested pre-creation triage on `/tickets/new`. |
+| **Admin** | `admin@supportdesk.internal` | `Password123!` | Superuser access across all customer tickets, user roles, and staff AI features. |
+
+### Live AI Testing Telemetry Data
+
+| Feature | Input Ticket Context | Model Used | Tokens (Prompt / Comp / Total) | Estimated Cost | Validated Output |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Auto-Categorize** | Subject: "Payment failed on checkout"<br>Description: "Credit card declined with 504 gateway timeout" | `gemini-flash-lite-latest` | 365 / 42 / 407 | \$0.000084 | Category: `Billing`<br>Priority: `P2`<br>Confidence: `95%` |
+| **Suggest Reply** | Ticket #1 (Subject: "Login 401 Authentication Error") + Public Comments | `gemini-flash-lite-latest` | 368 / 106 / 474 | \$0.000118 | Streamed SSE draft advising computer clock sync; human-in-the-loop review. |
+
+---
+
+### Visual Evidence & Screenshots
+
+#### 1. Staff Ticket Creation with AI Triage (`/tickets/new`)
+Staff agents and admins receive the **✨ AI Ticket Triage** action panel with the **Auto-Classify with AI** trigger:
+![Staff Ticket Creation AI Triage](screenshots/05_staff_create_ticket_ai_triage.png)
+
+#### 2. Ticket Detail Page with AI Features (`/tickets/:id`)
+Ticket Detail page featuring **✨ AI Triage** badge recommendations in the sidebar and the streamed **✨ Suggest Reply with AI** action container:
+![Ticket Detail AI Features](screenshots/06_ticket_detail_ai_triage_and_suggest_reply.png)
+
+#### 3. Customer Ticket Submission Form
+External customer view ensuring internal staff AI tools are strictly hidden from unprivileged roles:
+![Customer Ticket Creation Form](screenshots/03_customer_ticket_creation_form.png)
+
+#### 4. Security: In-Memory Rate Limiting Enforcement
+Verification of authentication rate-limiting protection rejecting excessive login attempts per IP:
+![Rate Limiting Security Verification](screenshots/01_login_rate_limiting_security.png)
+
+#### 5. Graceful Provider Failure Handling
+User-friendly warning banner rendered when an AI provider key is unconfigured, preventing crashes or silent draft emissions:
+![AI Provider Error Banner](screenshots/02_ai_missing_key_graceful_error.png)
+
+
