@@ -142,6 +142,99 @@ async function request<T>(
   return parsed as ApiSuccessEnvelope<T>;
 }
 
+async function stream(
+  path: string,
+  callbacks: {
+    onChunk: (chunk: string) => void;
+    onDone?: (meta?: any) => void;
+    onError?: (error: Error) => void;
+  },
+  options?: { signal?: AbortSignal }
+): Promise<void> {
+  const baseUrl = resolveBaseUrl();
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const headers: Record<string, string> = {
+    Accept: 'text/event-stream',
+  };
+
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}${normalizedPath}`, {
+      method: 'GET',
+      headers,
+      signal: options?.signal,
+    });
+  } catch (err: any) {
+    if (err.name === 'AbortError') return;
+    const netErr = new ApiError(0, 'NETWORK_ERROR', 'Stream connection failed');
+    callbacks.onError?.(netErr);
+    throw netErr;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401 && onUnauthorized) {
+      onUnauthorized();
+    }
+    const err = new ApiError(
+      response.status,
+      `HTTP_${response.status}`,
+      `Streaming failed with status ${response.status}`
+    );
+    callbacks.onError?.(err);
+    throw err;
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const noBodyErr = new ApiError(0, 'STREAM_ERROR', 'No response body to stream');
+    callbacks.onError?.(noBodyErr);
+    throw noBodyErr;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(trimmed.slice(6));
+            if (data.chunk) {
+              callbacks.onChunk(data.chunk);
+            }
+            if (data.done) {
+              callbacks.onDone?.(data.meta);
+            }
+            if (data.error) {
+              callbacks.onError?.(new Error(data.error));
+            }
+          } catch {
+            // ignore malformed event lines
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    if (err.name === 'AbortError') return;
+    callbacks.onError?.(err);
+    throw err;
+  }
+}
+
 export const apiClient = {
   get: <T>(path: string, options?: { skipAuth?: boolean }) =>
     request<T>('GET', path, undefined, options),
@@ -151,5 +244,6 @@ export const apiClient = {
     request<T>('PATCH', path, body, options),
   delete: <T>(path: string, options?: { skipAuth?: boolean }) =>
     request<T>('DELETE', path, undefined, options),
+  stream,
 };
 
