@@ -17,18 +17,42 @@ export function isOpenAiConfigured(): boolean {
   if (customClient) {
     return true;
   }
-  const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-  return Boolean(
-    apiKey &&
-      apiKey.trim().length > 0 &&
-      apiKey !== 'mock' &&
-      apiKey !== 'demo' &&
-      apiKey !== 'your-openai-api-key-here'
+  const openAiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+  const geminiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+
+  const hasOpenAi = Boolean(
+    openAiKey &&
+      openAiKey.trim().length > 0 &&
+      openAiKey !== 'mock' &&
+      openAiKey !== 'demo' &&
+      openAiKey !== 'your-openai-api-key-here'
   );
+
+  const hasGemini = Boolean(
+    geminiKey &&
+      geminiKey.trim().length > 0 &&
+      geminiKey !== 'mock' &&
+      geminiKey !== 'demo'
+  );
+
+  return hasOpenAi || hasGemini;
 }
 
 /**
- * Returns the singleton OpenAI client.
+ * Returns the appropriate model name based on configured keys.
+ */
+export function getActiveAiModel(): string {
+  const geminiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const openAiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+
+  if (geminiKey || (openAiKey && openAiKey.startsWith('AIza'))) {
+    return env.GEMINI_MODEL || 'gemini-1.5-flash';
+  }
+  return env.OPENAI_MODEL || 'gpt-4o-mini';
+}
+
+/**
+ * Returns the singleton AI client (OpenAI or Gemini via official OpenAI-compatible gateway).
  * Strictly backend-only; fails fast with clear guidance if API key is unconfigured.
  */
 export function getOpenAiClient(): OpenAI {
@@ -36,18 +60,37 @@ export function getOpenAiClient(): OpenAI {
     return customClient;
   }
 
-  const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+  const geminiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const openAiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
-    throw new Error(
-      'OPENAI_API_KEY is not configured in backend environment. Set OPENAI_API_KEY in .env.'
-    );
+  // 1. Google Gemini Key (starts with AIza... or set via GEMINI_API_KEY)
+  if (geminiKey || (openAiKey && openAiKey.startsWith('AIza'))) {
+    const key = geminiKey || openAiKey!;
+    customClient = new OpenAI({
+      apiKey: key,
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    });
+    return customClient;
   }
 
-  customClient = new OpenAI({
-    apiKey,
-  });
+  // 2. OpenAI Key (starts with sk-...)
+  if (openAiKey && openAiKey.startsWith('sk-')) {
+    customClient = new OpenAI({
+      apiKey: openAiKey,
+    });
+    return customClient;
+  }
 
-  return customClient;
+  // 3. Fallback to generic openAiKey if provided
+  if (openAiKey) {
+    customClient = new OpenAI({
+      apiKey: openAiKey,
+    });
+    return customClient;
+  }
+
+  throw new Error(
+    'Neither OPENAI_API_KEY nor GEMINI_API_KEY is configured in backend environment. Set GEMINI_API_KEY or OPENAI_API_KEY in .env.'
+  );
 }
 

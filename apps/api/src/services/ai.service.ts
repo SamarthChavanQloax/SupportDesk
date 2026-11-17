@@ -1,4 +1,4 @@
-import { getOpenAiClient, isOpenAiConfigured } from '../ai/client';
+import { getOpenAiClient, isOpenAiConfigured, getActiveAiModel } from '../ai/client';
 import { calculateCost } from '../ai/cost';
 import { logAiUsage } from '../ai/usage-logger';
 import {
@@ -38,10 +38,14 @@ export interface StreamCallbacks {
 }
 
 export class AiService {
-  private defaultModel: string;
+  private defaultModel?: string;
 
   constructor(defaultModel?: string) {
-    this.defaultModel = defaultModel || env.OPENAI_MODEL || 'gpt-4o-mini';
+    this.defaultModel = defaultModel;
+  }
+
+  private resolveModel(): string {
+    return this.defaultModel || getActiveAiModel();
   }
 
   /**
@@ -52,7 +56,7 @@ export class AiService {
     callbacks: StreamCallbacks
   ): Promise<void> {
     const startTime = Date.now();
-    const model = this.defaultModel;
+    const model = this.resolveModel();
 
     // 1. Fetch ticket
     const ticket = await ticketRepository.findById(ticketId, false);
@@ -183,7 +187,7 @@ export class AiService {
     textData?: { title: string; description: string }
   ): Promise<AiCategorization & { meta: { model: string; tokens: number; cost: number } }> {
     const startTime = Date.now();
-    const model = this.defaultModel;
+    const model = this.resolveModel();
 
     let title = textData?.title?.trim();
     let description = textData?.description?.trim();

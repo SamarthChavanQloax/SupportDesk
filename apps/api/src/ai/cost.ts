@@ -16,6 +16,18 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
     promptCostPerMillion: 0.5,
     completionCostPerMillion: 1.5,
   },
+  'gemini-1.5-flash': {
+    promptCostPerMillion: 0.075,
+    completionCostPerMillion: 0.3,
+  },
+  'gemini-2.0-flash': {
+    promptCostPerMillion: 0.1,
+    completionCostPerMillion: 0.4,
+  },
+  'gemini-1.5-pro': {
+    promptCostPerMillion: 1.25,
+    completionCostPerMillion: 5.0,
+  },
 };
 
 export interface CostBreakdown {
@@ -54,3 +66,4 @@ export function calculateCost(
     currency: 'USD',
   };
 }
+
