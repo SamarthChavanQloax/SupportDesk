@@ -11,6 +11,10 @@ import {
   createComment,
 } from '../controllers/comment.controller';
 import {
+  suggestReply,
+  categorizeTicket,
+} from '../controllers/ai.controller';
+import {
   validateParams,
   validateQuery,
   validateBody,
@@ -64,6 +68,37 @@ router.post(
   validateParams(ticketIdParamSchema),
   validateBody(createCommentSchema),
   createComment
+);
+
+// AI Feature 1: Streamed Suggest Reply (Agent & Admin only)
+router.get(
+  '/:id/ai/suggest-reply',
+  requireRole('agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  suggestReply
+);
+
+router.post(
+  '/:id/ai/suggest-reply',
+  requireRole('agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  suggestReply
+);
+
+// AI Feature 2: Auto-categorize + Priority (Agent & Admin only)
+// 1) For an existing ticket by ID
+router.post(
+  '/:id/ai/categorize',
+  requireRole('agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  categorizeTicket
+);
+
+// 2) For draft tickets (e.g. create ticket form) passing title and description in body
+router.post(
+  '/ai/categorize',
+  requireRole('agent', 'admin'),
+  categorizeTicket
 );
 
 export { router as ticketRouter };
