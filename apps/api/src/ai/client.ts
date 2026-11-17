@@ -46,7 +46,7 @@ export function getActiveAiModel(): string {
   const openAiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
   if (geminiKey || (openAiKey && openAiKey.startsWith('AIza'))) {
-    return env.GEMINI_MODEL || 'gemini-1.5-flash';
+    return env.GEMINI_MODEL || 'gemini-flash-lite-latest';
   }
   return env.OPENAI_MODEL || 'gpt-4o-mini';
 }
