@@ -166,4 +166,35 @@
 - **What I learned:** Creating focused, accessible primitive components with programmatic IDs, semantic elements, and keyboard traps immediately simplifies page code, guarantees WCAG compliance, and prevents copy-pasted UI regressions.
 - **PR:** [PR #29 — Feat/web UI quality](https://github.com/SamarthChavanQloax/SupportDesk/pull/29)
 
+---
+
+## Entry 23 — Week 3 Day 4 (Day 16): AI Features Inside SupportDesk
+- **Date:** 24 November 2026
+- **Goal:** Implement two backend-driven AI features using OpenAI: streamed **Suggest Reply** (SSE) and **Auto-categorise + Priority** (structured JSON validated with Zod). Enforce versioned prompt templates, token usage & cost logging per call, and ensure zero client-side OpenAI leaks.
+- **Prompt used:**
+  > "Act as a senior backend and frontend engineer. We need to integrate two AI features into SupportDesk using the OpenAI API:
+  > 1. Suggest Reply: streams a draft response based on ticket details and comment history via SSE.
+  > 2. Auto-categorise + Priority: predicts category and priority as structured JSON validated with Zod.
+  > Keep the OpenAI client strictly inside apps/api/src/ai/. Store prompts as versioned files.
+  > Calculate and log token usage and costs per call using official pricing.
+  > Never allow the frontend to call OpenAI or expose API keys.
+  > Write unit and integration tests with mocked providers. Propose the architectural plan first."
+- **Summary of AI response:**
+  1. Isolated OpenAI singleton client in `apps/api/src/ai/client.ts`.
+  2. Created versioned prompt templates `suggest-reply.v1.ts` (`suggest-reply-v1.0.0`) and `categorize.v1.ts` (`categorize-ticket-v1.0.0`), separating system instructions from untrusted ticket context.
+  3. Built `AiService` in `apps/api/src/services/ai.service.ts` with SSE streaming for replies and Zod schema validation (`aiCategorizationSchema`) for categorization.
+  4. Added `cost.ts` and `usage-logger.ts` recording token counts and dollar cost per call based on official `gpt-4o-mini` pricing.
+  5. Implemented `ai.controller.ts` and routes under `/tickets/:id/ai/suggest-reply` and `/tickets/ai/categorize`, restricted strictly to `agent` and `admin` roles.
+  6. Added frontend UI controls: "✨ Suggest Reply with AI" on `TicketDetailPage` (streaming draft with "Use Draft" button) and "Auto-Classify with AI" on `CreateTicketPage` and `TicketDetailPage`.
+- **What the AI generated incorrectly or needed refactoring:**
+  - Initial Zod 4 enum schema used `{ errorMap }` which was deprecated in Zod 4. Refactored to Zod 4 `{ message }` parameter.
+  - Express 5 `req.params.id` is typed as `string | string[]`. Added sanitization to extract string before `parseInt`.
+  - Ensured `streamSuggestReply` in the UI does not overwrite existing comment text unless the agent explicitly clicks "Use Draft".
+- **How I checked the result:**
+  - `npm --prefix apps/api test`: **8 test suites passed, 103 tests passed, 0 failed** (including 17 AI unit & route tests).
+  - `npm --prefix apps/web test -- --run`: **14 test suites passed, 63 tests passed, 0 failed** (including 4 AI frontend UI tests).
+  - `npm --prefix apps/api run build` and `npm --prefix apps/web run build`: Both compiled with 0 TypeScript errors.
+  - Verified zero `OPENAI_API_KEY` or `sk-` secrets in web bundles.
+- **What I learned:** Keeping LLM interactions strictly on the backend behind application-level authentication, versioning prompts as immutable code artifacts, and parsing all model outputs with Zod provides deterministic reliability, auditability, and completely eliminates client-side secret exposure.
+
 
