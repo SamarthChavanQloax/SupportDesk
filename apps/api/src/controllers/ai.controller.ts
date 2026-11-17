@@ -33,18 +33,18 @@ export async function suggestReply(
   try {
     await aiService.streamSuggestReply(ticketId, {
       onChunk: (chunk: string) => {
-        if (!isClosed) {
+        if (!isClosed && !res.writableEnded) {
           res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
         }
       },
       onDone: (meta) => {
-        if (!isClosed) {
+        if (!isClosed && !res.writableEnded) {
           res.write(`data: ${JSON.stringify({ done: true, meta })}\n\n`);
           res.end();
         }
       },
       onError: (err) => {
-        if (!isClosed) {
+        if (!isClosed && !res.writableEnded) {
           res.write(
             `data: ${JSON.stringify({ error: err.message || 'Stream error' })}\n\n`
           );
@@ -56,7 +56,7 @@ export async function suggestReply(
     if (!res.headersSent) {
       return next(error);
     }
-    if (!isClosed) {
+    if (!isClosed && !res.writableEnded) {
       res.write(
         `data: ${JSON.stringify({ error: error.message || 'AI provider error' })}\n\n`
       );

@@ -11,6 +11,23 @@ export function setOpenAiClient(client: OpenAI | null): void {
 }
 
 /**
+ * Checks whether a valid OpenAI client or API key is configured.
+ */
+export function isOpenAiConfigured(): boolean {
+  if (customClient) {
+    return true;
+  }
+  const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+  return Boolean(
+    apiKey &&
+      apiKey.trim().length > 0 &&
+      apiKey !== 'mock' &&
+      apiKey !== 'demo' &&
+      apiKey !== 'your-openai-api-key-here'
+  );
+}
+
+/**
  * Returns the singleton OpenAI client.
  * Strictly backend-only; fails fast with clear guidance if API key is unconfigured.
  */
@@ -33,3 +50,4 @@ export function getOpenAiClient(): OpenAI {
 
   return customClient;
 }
+

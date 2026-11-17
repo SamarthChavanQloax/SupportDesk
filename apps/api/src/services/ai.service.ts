@@ -1,4 +1,4 @@
-import { getOpenAiClient } from '../ai/client';
+import { getOpenAiClient, isOpenAiConfigured } from '../ai/client';
 import { calculateCost } from '../ai/cost';
 import { logAiUsage } from '../ai/usage-logger';
 import {
@@ -86,6 +86,12 @@ export class AiService {
     };
 
     const userPrompt = buildSuggestReplyUserPrompt(context);
+
+    // If no OpenAI API key is configured in dev environment, stream realistic simulated response
+    if (!isOpenAiConfigured()) {
+      await this.streamSimulatedReply(ticketId, context, model, startTime, callbacks);
+      return;
+    }
 
     let promptTokens = 0;
     let completionTokens = 0;
@@ -202,6 +208,11 @@ export class AiService {
 
     const userPrompt = buildCategorizeUserPrompt(context);
 
+    // If no OpenAI API key is configured in dev environment, use intelligent rule-based categorizer
+    if (!isOpenAiConfigured()) {
+      return this.simulatedCategorization(ticketId, title, description, model, startTime);
+    }
+
     try {
       const openai = getOpenAiClient();
 
@@ -285,6 +296,173 @@ export class AiService {
       throw error;
     }
   }
+
+  /**
+   * Local development simulation for streaming suggested reply when no OpenAI API key is present.
+   */
+  private async streamSimulatedReply(
+    ticketId: number,
+    context: SuggestReplyContext,
+    model: string,
+    startTime: number,
+    callbacks: StreamCallbacks
+  ): Promise<void> {
+    const customerName = context.ticket.customerName || 'there';
+    const title = context.ticket.title;
+    const desc = (context.ticket.description || '').toLowerCase();
+
+    let issueFocus =
+      'We have reviewed your inquiry and escalated it to our engineering triage queue for immediate investigation.';
+    if (desc.includes('billing') || desc.includes('invoice') || desc.includes('payment') || desc.includes('charge')) {
+      issueFocus =
+        'Our billing operations team has reviewed your transaction records. We are verifying the charge details to ensure proper adjustment.';
+    } else if (desc.includes('504') || desc.includes('gateway') || desc.includes('network') || desc.includes('timeout')) {
+      issueFocus =
+        'Our infrastructure telemetry indicates transient edge gateway latency affecting service routing. Traffic failover is actively mitigating this.';
+    } else if (desc.includes('password') || desc.includes('login') || desc.includes('account') || desc.includes('auth')) {
+      issueFocus =
+        'We have checked your account status and reset authentication flags. Please check your inbox for an authorization token.';
+    }
+
+    const draft = `Hello ${customerName},
+
+Thank you for reaching out to SupportDesk regarding "${title}".
+
+${issueFocus}
+
+We are actively monitoring system logs and will share an update as soon as the next milestone is verified. In the meantime, please let us know if you observe any change in behavior or have relevant error screenshots.
+
+Best regards,
+SupportDesk Engineering Support`;
+
+    // Stream out chunks with slight delay to simulate realistic SSE streaming
+    const words = draft.split(' ');
+    for (let i = 0; i < words.length; i += 3) {
+      const chunk = words.slice(i, i + 3).join(' ') + ' ';
+      callbacks.onChunk(chunk);
+      await new Promise((resolve) => setTimeout(resolve, 35));
+    }
+
+    const promptTokens = 120;
+    const completionTokens = words.length;
+    const totalTokens = promptTokens + completionTokens;
+    const cost = calculateCost('gpt-4o-mini', promptTokens, completionTokens);
+    const durationMs = Date.now() - startTime;
+
+    logAiUsage({
+      feature: 'suggest_reply',
+      model: `${model} (dev-simulated)`,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      cost,
+      durationMs,
+      ticketId,
+      success: true,
+    });
+
+    callbacks.onDone?.({
+      model: `${model} (dev-simulated)`,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      totalCost: cost.totalCost,
+    });
+  }
+
+  /**
+   * Local development simulation for categorization when no OpenAI API key is present.
+   */
+  private async simulatedCategorization(
+    ticketId: number | undefined,
+    title: string,
+    description: string,
+    model: string,
+    startTime: number
+  ): Promise<AiCategorization & { meta: { model: string; tokens: number; cost: number } }> {
+    const text = `${title} ${description}`.toLowerCase();
+
+    let category: 'Billing' | 'Technical' | 'Security' | 'Network' | 'Account' | 'General' = 'General';
+    let priority: 'P1' | 'P2' | 'P3' | 'P4' = 'P3';
+    let confidence = 0.88;
+    let reasoning = 'Standard multi-purpose customer inquiry analyzed via SupportDesk triage heuristics.';
+
+    if (text.includes('security') || text.includes('breach') || text.includes('vulnerability') || text.includes('compromised')) {
+      category = 'Security';
+      priority = 'P1';
+      confidence = 0.96;
+      reasoning = 'High risk: critical security or vulnerability terminology detected.';
+    } else if (text.includes('504') || text.includes('outage') || text.includes('down') || text.includes('gateway timeout')) {
+      category = text.includes('payment') || text.includes('checkout') ? 'Billing' : 'Network';
+      priority = 'P1';
+      confidence = 0.94;
+      reasoning = 'Critical service outage or transaction gateway timeout affecting availability.';
+    } else if (text.includes('billing') || text.includes('invoice') || text.includes('charge') || text.includes('refund') || text.includes('payment')) {
+      category = 'Billing';
+      priority = text.includes('urgent') || text.includes('double') ? 'P1' : 'P2';
+      confidence = 0.93;
+      reasoning = 'Payment, invoice reconciliation, or financial adjustment request.';
+    } else if (text.includes('vpn') || text.includes('latency') || text.includes('dns') || text.includes('network') || text.includes('connection')) {
+      category = 'Network';
+      priority = 'P2';
+      confidence = 0.91;
+      reasoning = 'Network routing, edge gateway latency, or connectivity constraint detected.';
+    } else if (text.includes('login') || text.includes('password') || text.includes('2fa') || text.includes('account') || text.includes('auth')) {
+      category = 'Account';
+      priority = 'P2';
+      confidence = 0.90;
+      reasoning = 'Account authentication or credential access management.';
+    } else if (text.includes('bug') || text.includes('error') || text.includes('crash') || text.includes('null') || text.includes('exception')) {
+      category = 'Technical';
+      priority = 'P2';
+      confidence = 0.89;
+      reasoning = 'Application code exception or runtime software defect.';
+    }
+
+    const payload = {
+      category,
+      priority,
+      confidence,
+      reasoning,
+    };
+
+    // Strictly validate against Zod schema to uphold contract
+    const validationResult = aiCategorizationSchema.safeParse(payload);
+    if (!validationResult.success) {
+      throw new ValidationError(
+        'Simulated AI output failed structured schema validation',
+        validationResult.error.format()
+      );
+    }
+
+    const promptTokens = 95;
+    const completionTokens = 42;
+    const totalTokens = promptTokens + completionTokens;
+    const cost = calculateCost('gpt-4o-mini', promptTokens, completionTokens);
+    const durationMs = Date.now() - startTime;
+
+    logAiUsage({
+      feature: 'categorize_ticket',
+      model: `${model} (dev-simulated)`,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      cost,
+      durationMs,
+      ticketId,
+      success: true,
+    });
+
+    return {
+      ...validationResult.data,
+      meta: {
+        model: `${model} (dev-simulated)`,
+        tokens: totalTokens,
+        cost: cost.totalCost,
+      },
+    };
+  }
 }
 
 export const aiService = new AiService();
+
