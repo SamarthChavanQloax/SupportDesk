@@ -163,3 +163,42 @@ export async function createComment(
   );
   return response.data;
 }
+
+export interface AiCategorizeResult {
+  category: string;
+  priority: TicketPriority;
+  confidence: number;
+  reasoning: string;
+}
+
+export interface StreamSuggestReplyCallbacks {
+  onChunk: (chunk: string) => void;
+  onDone?: (meta?: any) => void;
+  onError?: (err: Error) => void;
+}
+
+/**
+ * Stream a suggested reply draft from backend AI service
+ */
+export async function streamSuggestReply(
+  ticketId: number,
+  callbacks: StreamSuggestReplyCallbacks,
+  signal?: AbortSignal
+): Promise<void> {
+  return apiClient.stream(`/tickets/${ticketId}/ai/suggest-reply`, callbacks, { signal });
+}
+
+/**
+ * Auto-categorise and predict priority using backend Zod-validated AI service
+ */
+export async function categorizeTicket(payload: {
+  ticketId?: number;
+  title?: string;
+  description?: string;
+}): Promise<AiCategorizeResult> {
+  const endpoint = payload.ticketId
+    ? `/tickets/${payload.ticketId}/ai/categorize`
+    : '/tickets/ai/categorize';
+  const response = await apiClient.post<AiCategorizeResult>(endpoint, payload);
+  return response.data;
+}

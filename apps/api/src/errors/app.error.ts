@@ -56,6 +56,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class ModerationError extends AppError {
+  constructor(message: string = 'Content failed safety and moderation policy', details?: unknown) {
+    super(400, 'MODERATION_ERROR', message, details);
+  }
+}
+
 export class InternalServerError extends AppError {
   constructor(message: string = 'Internal server error') {
     super(500, 'INTERNAL_SERVER_ERROR', message, undefined, false);

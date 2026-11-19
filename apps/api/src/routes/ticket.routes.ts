@@ -11,6 +11,11 @@ import {
   createComment,
 } from '../controllers/comment.controller';
 import {
+  suggestReply,
+  categorizeTicket,
+} from '../controllers/ai.controller';
+import { aiPerUserRateLimiter } from '../ai/guardrails/rate-limiter';
+import {
   validateParams,
   validateQuery,
   validateBody,
@@ -64,6 +69,41 @@ router.post(
   validateParams(ticketIdParamSchema),
   validateBody(createCommentSchema),
   createComment
+);
+
+// AI Feature 1: Streamed Suggest Reply (Agent & Admin only, per-user rate limited)
+router.get(
+  '/:id/ai/suggest-reply',
+  aiPerUserRateLimiter,
+  requireRole('agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  suggestReply
+);
+
+router.post(
+  '/:id/ai/suggest-reply',
+  aiPerUserRateLimiter,
+  requireRole('agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  suggestReply
+);
+
+// AI Feature 2: Auto-categorize + Priority (Agent & Admin only, per-user rate limited)
+// 1) For an existing ticket by ID
+router.post(
+  '/:id/ai/categorize',
+  aiPerUserRateLimiter,
+  requireRole('agent', 'admin'),
+  validateParams(ticketIdParamSchema),
+  categorizeTicket
+);
+
+// 2) For draft tickets (e.g. create ticket form) passing title and description in body
+router.post(
+  '/ai/categorize',
+  aiPerUserRateLimiter,
+  requireRole('agent', 'admin'),
+  categorizeTicket
 );
 
 export { router as ticketRouter };

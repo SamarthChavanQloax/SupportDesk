@@ -9,7 +9,13 @@ import {
   StatusBadge,
   Textarea,
 } from '../components/ui';
-import type { TicketComment, TicketStatus } from '../features/tickets/api/tickets.api';
+import {
+  streamSuggestReply,
+  categorizeTicket,
+  type AiCategorizeResult,
+  type TicketComment,
+  type TicketStatus,
+} from '../features/tickets/api/tickets.api';
 import {
   useComments,
   useCreateComment,
@@ -72,6 +78,62 @@ export function TicketDetailPage() {
   // Status transition state
   const [statusErrorMsg, setStatusErrorMsg] = useState<string | null>(null);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+
+  // AI Suggest Reply State
+  const [isSuggestingReply, setIsSuggestingReply] = useState(false);
+  const [suggestedReply, setSuggestedReply] = useState<string | null>(null);
+  const [aiSuggestError, setAiSuggestError] = useState<string | null>(null);
+
+  // AI Triage (Categorize + Priority) State
+  const [isCategorizing, setIsCategorizing] = useState(false);
+  const [aiCategorizeResult, setAiCategorizeResult] = useState<AiCategorizeResult | null>(null);
+  const [aiCategorizeError, setAiCategorizeError] = useState<string | null>(null);
+
+  const handleSuggestReply = async () => {
+    if (!ticket) return;
+    setIsSuggestingReply(true);
+    setSuggestedReply('');
+    setAiSuggestError(null);
+
+    try {
+      await streamSuggestReply(ticket.id, {
+        onChunk: (chunk) => {
+          setSuggestedReply((prev) => (prev ?? '') + chunk);
+        },
+        onDone: () => {
+          setIsSuggestingReply(false);
+        },
+        onError: (err) => {
+          setAiSuggestError(err.message || 'Failed to stream suggested reply');
+          setIsSuggestingReply(false);
+        },
+      });
+    } catch (err: any) {
+      setAiSuggestError(err.message || 'AI service error');
+      setIsSuggestingReply(false);
+    }
+  };
+
+  const handleApplySuggestedReply = () => {
+    if (suggestedReply) {
+      setCommentBody((prev) => (prev ? `${prev}\n\n${suggestedReply}` : suggestedReply));
+      setSuggestedReply(null);
+    }
+  };
+
+  const handleAutoCategorize = async () => {
+    if (!ticket) return;
+    setIsCategorizing(true);
+    setAiCategorizeError(null);
+    try {
+      const result = await categorizeTicket({ ticketId: ticket.id });
+      setAiCategorizeResult(result);
+    } catch (err: any) {
+      setAiCategorizeError(err.message || 'Failed to analyze ticket');
+    } finally {
+      setIsCategorizing(false);
+    }
+  };
 
   if (Number.isNaN(ticketId) || ticketId <= 0) {
     return (
@@ -254,6 +316,16 @@ export function TicketDetailPage() {
                   >
                     Change Status
                   </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAutoCategorize}
+                    isLoading={isCategorizing}
+                    loadingText="Analyzing..."
+                  >
+                    ✨ AI Triage
+                  </Button>
                   {ticket.status !== 'closed' ? (
                     <Button
                       variant="outline"
@@ -291,6 +363,59 @@ export function TicketDetailPage() {
               className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs text-rose-800"
             >
               {statusErrorMsg}
+            </div>
+          ) : null}
+
+          {/* AI Triage Recommendation Card */}
+          {aiCategorizeResult ? (
+            <div
+              role="region"
+              aria-label="AI Categorization Suggestion"
+              className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 text-xs shadow-xs"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-indigo-900">✨ AI Triage Recommendation</span>
+                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 font-medium text-indigo-800">
+                    {Math.round(aiCategorizeResult.confidence * 100)}% confidence
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-normal">
+                    (AI suggestion — agent verified)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAiCategorizeResult(null)}
+                  className="text-slate-400 hover:text-slate-600 text-sm font-bold px-1"
+                  aria-label="Dismiss AI suggestion"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Suggested Category:</span>
+                  <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-indigo-100">
+                    {aiCategorizeResult.category}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Suggested Priority:</span>
+                  <PriorityBadge priority={aiCategorizeResult.priority} />
+                </div>
+              </div>
+              <p className="mt-2 text-slate-700 italic border-t border-indigo-100/70 pt-1.5">
+                "{aiCategorizeResult.reasoning}"
+              </p>
+            </div>
+          ) : null}
+
+          {aiCategorizeError ? (
+            <div
+              role="alert"
+              className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs text-rose-800"
+            >
+              AI Triage Error: {aiCategorizeError}
             </div>
           ) : null}
 
@@ -438,7 +563,88 @@ export function TicketDetailPage() {
             onSubmit={handleCommentSubmit}
             className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs"
           >
-            <h3 className="text-sm font-semibold text-slate-900">Add a Response</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-slate-900">Add a Response</h3>
+              {isAgentOrAdmin ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSuggestReply}
+                  isLoading={isSuggestingReply}
+                  loadingText="Drafting..."
+                >
+                  ✨ Suggest Reply with AI
+                </Button>
+              ) : null}
+            </div>
+
+            {/* AI Streamed Suggestion Draft Box */}
+            {suggestedReply !== null || isSuggestingReply ? (
+              <div
+                role="region"
+                aria-label="AI Generated Reply Draft"
+                className="mt-3 rounded-xl border border-blue-200 bg-blue-50/70 p-4 shadow-xs"
+              >
+                <div className="flex items-center justify-between gap-2 border-b border-blue-200/60 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm" aria-hidden="true">
+                      🤖
+                    </span>
+                    <span className="text-xs font-semibold text-blue-950">
+                      AI Suggested Reply (Draft Only)
+                    </span>
+                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-800">
+                      gpt-4o-mini
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {suggestedReply && !isSuggestingReply ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="primary"
+                        onClick={handleApplySuggestedReply}
+                      >
+                        Use Draft
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSuggestedReply(null);
+                        setAiSuggestError(null);
+                      }}
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
+                  {suggestedReply}
+                  {isSuggestingReply ? (
+                    <span className="ml-1 inline-block h-4 w-1 animate-pulse bg-blue-600 align-middle" />
+                  ) : null}
+                </div>
+
+                <p className="mt-2.5 text-[11px] text-slate-500">
+                  ⚠️ This draft is generated by AI for agent review. It will not be sent to the
+                  customer until you review and submit.
+                </p>
+              </div>
+            ) : null}
+
+            {aiSuggestError ? (
+              <div
+                role="alert"
+                className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs text-rose-800"
+              >
+                AI Suggestion Error: {aiSuggestError}
+              </div>
+            ) : null}
 
             {commentErrorMsg ? (
               <div

@@ -3,8 +3,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
-import { Button, Input, Select, Textarea } from '../components/ui';
+import { Button, Input, PriorityBadge, Select, Textarea } from '../components/ui';
 import { useCreateTicket } from '../features/tickets/hooks/useTickets';
+import {
+  categorizeTicket,
+  type AiCategorizeResult,
+} from '../features/tickets/api/tickets.api';
+import { useAuth } from '../lib/auth';
 import {
   createTicketSchema,
   type CreateTicketFormValues,
@@ -13,7 +18,13 @@ import { ApiError } from '../lib/api-client';
 
 export function CreateTicketPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAgentOrAdmin = user?.role === 'agent' || user?.role === 'admin';
+
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isCategorizing, setIsCategorizing] = useState(false);
+  const [aiCategorizeResult, setAiCategorizeResult] = useState<AiCategorizeResult | null>(null);
+  const [aiCategorizeNotice, setAiCategorizeNotice] = useState<string | null>(null);
 
   const createTicketMutation = useCreateTicket();
 
@@ -21,6 +32,8 @@ export function CreateTicketPage() {
     register,
     handleSubmit,
     setError,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateTicketFormValues>({
     resolver: zodResolver(createTicketSchema),
@@ -31,6 +44,44 @@ export function CreateTicketPage() {
       category: '',
     },
   });
+
+  const titleValue = watch('title');
+  const descriptionValue = watch('description');
+
+  const handleAutoCategorize = async () => {
+    setAiCategorizeNotice(null);
+    if (!titleValue || titleValue.trim().length < 3) {
+      setAiCategorizeNotice('Please enter a ticket subject (min 3 chars) first for AI analysis.');
+      return;
+    }
+    if (!descriptionValue || descriptionValue.trim().length < 5) {
+      setAiCategorizeNotice(
+        'Please enter a detailed description (min 5 chars) first for AI analysis.'
+      );
+      return;
+    }
+
+    setIsCategorizing(true);
+    try {
+      const result = await categorizeTicket({
+        title: titleValue.trim(),
+        description: descriptionValue.trim(),
+      });
+      setAiCategorizeResult(result);
+    } catch (err: any) {
+      setAiCategorizeNotice(err.message || 'AI categorization unavailable.');
+    } finally {
+      setIsCategorizing(false);
+    }
+  };
+
+  const handleApplyAiSuggestion = () => {
+    if (aiCategorizeResult) {
+      setValue('category', aiCategorizeResult.category, { shouldValidate: true });
+      setValue('priority', aiCategorizeResult.priority, { shouldValidate: true });
+      setAiCategorizeResult(null);
+    }
+  };
 
   const onSubmit = async (values: CreateTicketFormValues) => {
     setServerError(null);
@@ -123,6 +174,69 @@ export function CreateTicketPage() {
             error={errors.title?.message}
             {...register('title')}
           />
+
+          {/* AI Auto-Categorize Section (Agents / Admins) */}
+          {isAgentOrAdmin ? (
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span className="text-xs font-bold text-indigo-950">✨ AI Ticket Triage</span>
+                  <p className="text-[11px] text-slate-500">
+                    Analyze subject and description to suggest Category and Priority
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoCategorize}
+                  isLoading={isCategorizing}
+                  loadingText="Classifying..."
+                >
+                  Auto-Classify with AI
+                </Button>
+              </div>
+
+              {aiCategorizeNotice ? (
+                <p className="mt-2 text-xs text-amber-800 bg-amber-50 px-2.5 py-1.5 rounded border border-amber-200">
+                  {aiCategorizeNotice}
+                </p>
+              ) : null}
+
+              {aiCategorizeResult ? (
+                <div className="mt-3 rounded-lg border border-indigo-200 bg-white p-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-indigo-900">
+                      Recommendation ({Math.round(aiCategorizeResult.confidence * 100)}% confidence)
+                    </span>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={handleApplyAiSuggestion}
+                    >
+                      Apply Suggestions
+                    </Button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs">
+                    <div>
+                      <span className="text-slate-500">Category: </span>
+                      <span className="font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                        {aiCategorizeResult.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-500">Priority: </span>
+                      <PriorityBadge priority={aiCategorizeResult.priority} />
+                    </div>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-slate-600 italic">
+                    "{aiCategorizeResult.reasoning}"
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           {/* Priority & Category Grid */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
