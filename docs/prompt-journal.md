@@ -236,3 +236,29 @@
 
 
 
+---
+
+## Entry 25 — Week 3 Day 5 (Day 17 Extension): Full-Stack Comprehensive QA Audit & Bug Remediation
+- **Date:** 25 November 2026
+- **Goal:** Act as Senior QA Lead / Security Auditor. Execute an exhaustive end-to-end verification of all 7 modules in SupportDesk using realistic dummy data, uncover edge cases and defects, fix them immediately, and produce a formal QA Test Report in Markdown and Word (.docx).
+- **Prompt used:**
+  > "Act as a senior tester and use dummy data and test all modules that we build also maintain professional test report if you get any bug then fix that."
+- **Summary of Actions & Discoveries:**
+  1. Built and executed comprehensive automated test harness `test-comprehensive-qa.ts` containing 49 live end-to-end test scenarios across:
+     - Module 1: System Infrastructure & Security Headers (Health, Helmet, CORS, OpenAPI Swagger)
+     - Module 2: Authentication & Authorization (Login, Registration, Token Expiry, Anti-Enumeration, Malformed Payloads)
+     - Module 3: Ticket Lifecycle & CRUD Operations (Creation, Listing, Scoping, Filtering, Sorting, SLA Targets, Status Transitions, Reopening)
+     - Module 4: Role-Based Access Control (Tenant Isolation, Anti-IDOR, Customer Route Restrictions)
+     - Module 5: Ticket Comments & Internal Notes Isolation (Customer vs Agent Visibility, Note Redaction)
+     - Module 6: AI Features (Auto-Categorization with Zod Schema Validation, SSE Suggested Reply Streaming)
+     - Module 7: AI Guardrails & Security Defenses (Input Truncation, Delimiter Escaping, PII Redaction, Moderation, Per-User Rate Limiting, Fallback)
+     - Module 8: Admin Privileges & Soft Deletion (Soft-delete audit, 404 exclusion)
+  2. Identified 3 critical defects during QA audit and performed immediate Root Cause Analysis (RCA):
+     - **BUG-QA-001 (High):** Rate limiter key generator checked `(req as any).currentUser?.id` instead of `req.user?.id`. Fixed in `rate-limiter.ts`.
+     - **BUG-QA-002 (High):** Moderation regex had leading `\b` which failed on `<script>` tags because `<` is a non-word character. Fixed in `moderation.ts`.
+     - **BUG-QA-003 (Medium):** Generic `BadRequestError` was thrown on moderation violations instead of a dedicated error code. Created `ModerationError` with code `MODERATION_ERROR`.
+  3. Re-ran test harness: **49 / 49 test cases passed (100% success)**.
+  4. Ran full test suites: 11 Jest suites (138 tests) passed, 14 Vitest suites (63 tests) passed. Total: **250 automated tests passing**.
+  5. Published comprehensive QA Test Report in `docs/day-17/SupportDesk_Comprehensive_QA_Test_Report.md` and `SupportDesk_Comprehensive_QA_Test_Report.docx`.
+- **Term of the Day: RCA (Root Cause Analysis)**:
+  - Applied directly to the `<script>` regex bypass bug: why did the regex fail on `<script>`? Because `\b` requires an alphanumeric character adjacent to a non-word character, which `<` cannot satisfy when preceded by whitespace. Fixing the root syntax rather than adding workarounds resolved the issue permanently.

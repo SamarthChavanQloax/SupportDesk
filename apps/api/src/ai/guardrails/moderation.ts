@@ -12,7 +12,7 @@ export interface ModerationResult {
 // Known toxic / malicious intent patterns
 const HATE_SPEECH_REGEX = /\b(nigger|faggot|kill\s+all\s+(?:jews|muslims|blacks|whites)|terrorist\s+attack)\b/i;
 const SELF_HARM_REGEX = /\b(suicide|kill\s+myself|end\s+my\s+life|hanging\s+myself)\b/i;
-const EXPLOIT_REGEX = /\b(drop\s+(?:table|database)|rm\s+-rf\s+\/|exec\s+xp_cmdshell|<script>alert|<script>)/i;
+const EXPLOIT_REGEX = /(?:\b(?:drop\s+(?:table|database)|rm\s+-rf\s+\/|exec\s+xp_cmdshell)\b|<script\b)/i;
 
 export function checkModeration(text: string): ModerationResult {
   if (!text) {

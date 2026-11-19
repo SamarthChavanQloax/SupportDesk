@@ -11,8 +11,9 @@ export const aiPerUserRateLimiter = rateLimit({
   max: 15, // Max 15 AI requests per minute
   keyGenerator: (req: Request) => {
     // Key by authenticated user ID if present; fallback to IP
-    if ((req as any).currentUser?.id) {
-      return `ai_user_${(req as any).currentUser.id}`;
+    const user = req.user || (req as any).currentUser;
+    if (user?.id) {
+      return `ai_user_${user.id}`;
     }
     return `ai_ip_${req.ip || 'unknown'}`;
   },

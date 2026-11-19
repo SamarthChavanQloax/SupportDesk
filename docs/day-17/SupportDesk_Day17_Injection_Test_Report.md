@@ -154,3 +154,4 @@ Automated test suite `apps/api/src/ai/__tests__/prompt-injection.test.ts` execut
 - **Test Suites:** 1 passed, 1 total
 - **Tests:** 20 passed (10 prompt assembly security tests + 10 triage defense tests)
 - **Status:** **100% Defended ✅**
+

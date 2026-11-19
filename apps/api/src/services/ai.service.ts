@@ -33,6 +33,7 @@ import {
   BadRequestError,
   ValidationError,
   InternalServerError,
+  ModerationError,
 } from '../errors/app.error';
 
 export interface StreamCallbacks {
@@ -248,7 +249,10 @@ export class AiService {
     const combined = `${title} ${description}`;
     const modResult = checkModeration(combined);
     if (modResult.isFlagged) {
-      throw new BadRequestError(`AI input flagged by safety policy: ${modResult.categories.join(', ')}. Manual triage required.`);
+      throw new ModerationError(
+        `AI input flagged by safety policy: ${modResult.categories.join(', ')}. Manual triage required.`,
+        { categories: modResult.categories }
+      );
     }
 
     // 3. Assemble V2 Prompt with untrusted delimiters & PII masking

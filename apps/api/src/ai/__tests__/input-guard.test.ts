@@ -63,6 +63,11 @@ describe('Input Guardrails and Delimiter Security', () => {
       const result = checkModeration(text);
       expect(result.isFlagged).toBe(true);
       expect(result.categories).toContain('exploit_attempt');
+
+      const xssText = "Check this out <script>alert('pwned')</script>";
+      const xssResult = checkModeration(xssText);
+      expect(xssResult.isFlagged).toBe(true);
+      expect(xssResult.categories).toContain('exploit_attempt');
     });
 
     it('passes standard technical inquiries cleanly', () => {
@@ -73,3 +78,4 @@ describe('Input Guardrails and Delimiter Security', () => {
     });
   });
 });
+

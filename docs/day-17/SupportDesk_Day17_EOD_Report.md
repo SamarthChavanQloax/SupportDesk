@@ -118,3 +118,4 @@ During initial testing of the 20-ticket evaluation suite against the live provid
 3. *Why did that cause 429?* Google AI Studio Free Tier enforces a strict quota limit of **15 requests per minute (15 RPM)**.
 4. *Root Cause:* The test harness lacked traffic pacing and rate-limit awareness for provider tier limits.
 5. *Permanent Architectural Solution:* We implemented request pacing (a 2.2-second sleep between requests), an automatic backoff retry handler with safe timeout management, and an offline simulation mode for local CI that eliminates reliance on external rate limits entirely.
+
