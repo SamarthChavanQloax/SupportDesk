@@ -219,3 +219,4 @@ The repeatable evaluation runner (`npm run test:ai:eval -- --simulated`) was exe
 - **Resilience:** Per-user rate limiting and safe failure fallback (`"AI unavailable — reply manually."`) prevent denial-of-service and safeguard staff workflows.
 
 **Recommendation:** **APPROVED FOR IMMEDIATE PULL REQUEST MERGE AND PRODUCTION DEPLOYMENT.**
+

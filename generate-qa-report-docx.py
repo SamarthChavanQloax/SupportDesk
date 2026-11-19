@@ -309,9 +309,18 @@ def create_styled_document():
         "Quality Verdict: "
     )
 
-    doc_path = "D:\\SupportD\\SupportDesk\\docs\\day-17\\SupportDesk_Comprehensive_QA_Test_Report.docx"
+    import os
+    qa_dir = os.path.join(os.path.dirname(__file__), "docs", "qa")
+    os.makedirs(qa_dir, exist_ok=True)
+    doc_path = os.path.join(qa_dir, "SupportDesk_Comprehensive_QA_Test_Report.docx")
     doc.save(doc_path)
     print(f"Report saved successfully to {doc_path}")
 
+    # Also keep a copy in day-17 for archival
+    day17_dir = os.path.join(os.path.dirname(__file__), "docs", "day-17")
+    if os.path.exists(day17_dir):
+        doc.save(os.path.join(day17_dir, "SupportDesk_Comprehensive_QA_Test_Report.docx"))
+
 if __name__ == "__main__":
     create_styled_document()
+
