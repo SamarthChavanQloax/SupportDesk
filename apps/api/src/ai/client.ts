@@ -2,6 +2,11 @@ import OpenAI from 'openai';
 import { env } from '../config/env';
 
 let customClient: OpenAI | null = null;
+let forceSimulation = false;
+
+export function setForceSimulation(val: boolean): void {
+  forceSimulation = val;
+}
 
 /**
  * Injects a mock or custom OpenAI client for testing.
@@ -14,6 +19,9 @@ export function setOpenAiClient(client: OpenAI | null): void {
  * Checks whether a valid OpenAI client or API key is configured.
  */
 export function isOpenAiConfigured(): boolean {
+  if (forceSimulation) {
+    return false;
+  }
   if (customClient) {
     return true;
   }

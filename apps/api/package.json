@@ -10,6 +10,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:integration": "jest src/__tests__/integration.test.ts --runInBand",
+    "test:ai:eval": "ts-node src/ai/evals/run-evaluation.ts",
     "test:legacy": "ts-node test-api.ts",
     "test:day10": "ts-node test-day10.ts",
     "build": "tsc",

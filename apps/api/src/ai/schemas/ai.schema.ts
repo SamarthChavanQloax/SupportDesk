@@ -30,6 +30,6 @@ export const aiCategorizationSchema = z.object({
     .trim()
     .min(3, 'Reasoning must be at least 3 characters')
     .max(300, 'Reasoning cannot exceed 300 characters'),
-});
+}).strict();
 
 export type AiCategorization = z.infer<typeof aiCategorizationSchema>;

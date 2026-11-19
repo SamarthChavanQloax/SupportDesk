@@ -152,7 +152,7 @@ describe('AiService - Suggest Reply (Streaming)', () => {
         onChunk: jest.fn(),
         onError: onErrorMock,
       })
-    ).rejects.toThrow('OpenAI rate limit exceeded (429)');
+    ).rejects.toThrow(/AI unavailable — reply manually.*OpenAI rate limit exceeded/);
 
     expect(onErrorMock).toHaveBeenCalledWith(expect.any(Error));
     expect(logAiUsage).toHaveBeenCalledWith(
